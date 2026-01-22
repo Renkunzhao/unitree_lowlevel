@@ -61,7 +61,7 @@ void LowLevelController::start(std::string config_file) {
 
   // Load LeggedModel
   auto model_config_file = configNode["model_config_file"].as<std::string>();
-  std::cout << "[DapcController] Load LeggedModel from " << model_config_file << std::endl; 
+  std::cout << "[LowLevelController] Load LeggedModel from " << model_config_file << std::endl; 
   robot_model_.loadConfig(YAML::LoadFile(model_config_file));
 
   // Initialize LeggedState

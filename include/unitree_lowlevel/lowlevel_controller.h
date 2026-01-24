@@ -45,7 +45,7 @@ protected:
 
   std::mutex joystick_mtx;
 
-  double control_dt_ = 0.002;
+  double ll_dt_ = 0.002;
   bool use_sim_timer_ = false;
   std::unique_ptr<LeggedAI::Timer> sim_timer_;
 

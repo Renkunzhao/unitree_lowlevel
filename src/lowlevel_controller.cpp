@@ -36,6 +36,7 @@ LowLevelController::LowLevelController() : rclcpp::Node("low_level_cmd_node") {
       TOPIC_JOYSTICK, 10, [this](const unitree_go::msg::WirelessController::SharedPtr msg) {
         std::lock_guard<std::mutex> lock(joystick_mtx);
         joystick_msg_ = *msg;
+        // std::cout << "[LowLevelController] Joystick msg received." << std::endl;
       });
 
   gamepad_.smooth = 0.2;
@@ -44,6 +45,8 @@ LowLevelController::LowLevelController() : rclcpp::Node("low_level_cmd_node") {
 
 void LowLevelController::start(std::string config_file) {
   auto configNode = YAML::LoadFile(config_file);
+  std::cout << "[LowLevelController] Load config from " << config_file << std::endl;
+  ll_dt_ = configNode["ll_dt"].as<double>();
   use_sim_timer_ = configNode["use_sim_timer"].as<bool>();
   kp_ = LeggedAI::yamlToEigenVector(configNode["PdStand"]["kp"]);
   kd_ = LeggedAI::yamlToEigenVector(configNode["PdStand"]["kd"]);
@@ -76,12 +79,12 @@ void LowLevelController::start(std::string config_file) {
 
   /*loop publishing thread*/
   if (use_sim_timer_) {
-    sim_timer_ = std::make_unique<LeggedAI::Timer>(int(control_dt_ * 1000),  
+    sim_timer_ = std::make_unique<LeggedAI::Timer>(int(ll_dt_ * 1000),  
         [this](int64_t) {
           LowCmdWrite();
         }, LeggedAI::Timer::Mode::SlowSim);
   } else {
-    sim_timer_ = std::make_unique<LeggedAI::Timer>(int(control_dt_ * 1000),  
+    sim_timer_ = std::make_unique<LeggedAI::Timer>(int(ll_dt_ * 1000),  
         [this](int64_t) {
           LowCmdWrite();
         }, LeggedAI::Timer::Mode::Realtime);
@@ -321,7 +324,7 @@ void LowLevelController::LowCmdWrite() {
 void LowLevelController::log(){
   CsvLogger& csvLogger = CsvLogger::getInstance();
   csvLogger.update("sim_time", lowstate_msg_.tick*0.001);
-  csvLogger.update("controller_time", loop_cnt_*control_dt_);
+  csvLogger.update("controller_time", loop_cnt_*ll_dt_);
   csvLogger.update("state", static_cast<int>(current_state_));
   csvLogger.update("loop_time", duration_ms_);
   csvLogger.update("ave_freq", ave_freq_);

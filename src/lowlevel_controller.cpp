@@ -157,7 +157,7 @@ void LowLevelController::torqueClip(){
     const double tau_eff_clamped = std::clamp(tau_eff, -lim, lim);
     cmd.tau += (tau_eff_clamped - tau_eff);
     if (tau_eff_clamped!=tau_eff) {
-      std::cout << "[LowLevelController] Leg " << j << " torque out of range [" << tau_eff << "], applying clip." << std::endl;
+      // std::cout << "[LowLevelController] Leg " << j << " torque out of range [" << tau_eff << "], applying clip." << std::endl;
     }
   }
 }

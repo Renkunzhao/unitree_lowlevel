@@ -315,7 +315,7 @@ void LowLevelController::LowCmdWrite() {
   // 统计
   duration_ms_ = duration<double, std::milli>(steady_clock::now() - start).count();
   loop_cnt_++;
-  double real_elapsed = duration<double, std::milli>(steady_clock::now() - start_wall_).count();
+  double real_elapsed = duration<double>(steady_clock::now() - start_wall_).count();
   ave_freq_ = loop_cnt_/real_elapsed;
 
   log();

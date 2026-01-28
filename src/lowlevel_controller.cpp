@@ -23,7 +23,7 @@ LowLevelController::LowLevelController() : rclcpp::Node("low_level_cmd_node") {
         lowcmd_msg_num_++;
         lowstate_msg_ = *msg;
         if (lowcmd_msg_num_ > 10) {
-          if (use_sim_timer_ && sim_timer_->wall_timer_running()) {
+          if (use_sim_timer_ && sim_timer_) {
             sim_timer_->step(lowstate_msg_.tick);
           } else if (!use_sim_timer_) {
             if (!sim_timer_->wall_timer_running()) {

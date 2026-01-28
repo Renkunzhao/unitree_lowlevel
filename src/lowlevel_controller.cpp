@@ -153,7 +153,7 @@ void LowLevelController::torqueClip(){
     auto& cmd = lowcmd_msg_.motor_cmd[j];
     auto& state = lowstate_msg_.motor_state[j];
     double tau_eff = cmd.tau + cmd.kp * (cmd.q - state.q) + cmd.kd * (cmd.dq - state.dq);
-    const double lim = robot_model_.tauMax()[j];
+    const double lim = robot_model_.tauMaxOrder()[j];
     const double tau_eff_clamped = std::clamp(tau_eff, -lim, lim);
     cmd.tau += (tau_eff_clamped - tau_eff);
     if (tau_eff_clamped!=tau_eff) {
@@ -269,7 +269,7 @@ void LowLevelController::LowCmdWrite() {
         double yaw_des = yaw_max_ * - gamepad_.rx;
 
         Eigen::VectorXd jointPos_des(robot_model_.nJoints());
-        robot_model_.stanceIK(jointPos_des, {0, 0, z_des}, {yaw_des, pitch_des, roll_des});
+        robot_model_.stanceIKOrder(jointPos_des, {0, 0, z_des}, {yaw_des, pitch_des, roll_des});
         // This line won't work since motiontime has not be setzero
         interpolateCmd(motiontime_/500., jointPos_des.data(), qj_stand_.data());
       }

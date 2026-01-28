@@ -94,6 +94,14 @@ protected:
                       const double* dq_init,
                       const double* kp,
                       const double* kd);
+                      
+  bool interpolateCmd(double t,
+                      const double* q_des,
+                      const double* q_init,
+                      const double* kp,
+                      const double* kd) {
+    return interpolateCmd(t, q_des, ZERO, ZERO, q_init, ZERO, kp, kd);
+  }
 
   bool interpolateCmd(double t,
                       const double* q_des,

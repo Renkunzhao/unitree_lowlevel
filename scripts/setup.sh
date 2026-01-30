@@ -15,6 +15,7 @@ echo "Setup unitree ros2 environment (interface: ${IFACE})"
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/../../../
 
 export WORKSPACE=$PROJECT_DIR
+export NetworkInterface=${IFACE}
 
 source /opt/ros/${ROS_DISTRO}/setup.bash
 source install/setup.bash

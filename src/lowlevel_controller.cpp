@@ -1,16 +1,16 @@
-#include "unitree_lowlevel/motor_crc.h"
 #include "unitree_lowlevel/lowlevel_controller.h"
+
 #include <cstddef>
 #include <cstdlib>
+#include <cstdint>
+#include <string>
+#include <yaml-cpp/yaml.h>
+
+#include "unitree_lowlevel/motor_crc.h"
 #include <legged_model/Timer.h>
 #include <legged_model/Utils.h>
 #include <legged_model/Lie.h>
 #include <logger/CsvLogger.h>
-
-#include <cstdint>
-#include <string>
-
-#include <yaml-cpp/yaml.h>
 
 // public
 
@@ -63,7 +63,7 @@ void LowLevelController::start(std::string config_file) {
   yaw_max_ = configNode["PdStand"]["yaw_max"].as<double>();
 
   // Load LeggedModel
-  auto model_config_file = configNode["model_config_file"].as<std::string>();
+  auto model_config_file = LeggedAI::getEnv("WORKSPACE") + "/" + configNode["model_config_file"].as<std::string>();
   std::cout << "[LowLevelController] Load LeggedModel from " << model_config_file << std::endl; 
   robot_model_.loadConfig(YAML::LoadFile(model_config_file));
 

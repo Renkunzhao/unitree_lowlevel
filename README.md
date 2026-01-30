@@ -19,8 +19,8 @@ Provides ROS 2 message packages so nodes can decode the Unitree messages. Otherw
 ### [unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco.git)
 Used for simulation validation before hardware deployment. Unitree MuJoCo provides the same API as the hardware, so you can switch between simulation and hardware by setting `ROS_DOMAIN_ID` and the network interface.
 ```bash
-source src/unitree_lowlevel/scripts/setup.sh <network-interface> <ros-distro>
-./src/unitree_mujoco/simulate/build/unitree_mujoco -i 0 -n <network-interface>
+source src/unitree_lowlevel/scripts/setup.sh <network-interface> $ROS_DISTRO
+./src/unitree_mujoco/simulate/build/unitree_mujoco -i 0 -n $NetworkInterface
 ```
 Note: By design, Unitree uses `ROS_DOMAIN_ID=0` on hardware and suggests `ROS_DOMAIN_ID=1` for simulation. Because simulation and hardware often run on different interfaces (e.g., `lo` and `eth0`), this repo uses `ROS_DOMAIN_ID=0` for both settings.
 
@@ -54,17 +54,17 @@ mkdir -p unitree_ws/src
 cd unitree_ws/src
 git clone https://github.com/Renkunzhao/unitree_lowlevel.git
 cd unitree_lowlevel
-./scripts/colcon-config.sh <ros-distro> <Release|Debug>
+./scripts/colcon-config.sh $ROS_DISTRO <Release|Debug>
 ```
 
 ### Run
 ```bash
 # Run test and stop the default controller (run once per boot)
-source src/unitree_lowlevel/scripts/setup.sh <network-interface> <ros-distro>
-./build/unitree_sdk2/bin/go2_stand_example <network-interface>
+source src/unitree_lowlevel/scripts/setup.sh <network-interface> $ROS_DISTRO
+./build/unitree_sdk2/bin/go2_stand_example $NetworkInterface
 
 # Low level controller
-ros2 run unitree_lowlevel go2_lowlevel_node <network-interface> $WORKSPACE$/src/unitree_lowlevel/config/go2.yaml
+ros2 run unitree_lowlevel go2_lowlevel_node $NetworkInterface $WORKSPACE/src/unitree_lowlevel/config/go2.yaml
 ```
 
 ## Usage

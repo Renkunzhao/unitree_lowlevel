@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
   YAML::Node configNode = YAML::LoadFile(configFile);
 
   std::string log_path;
-  log_path = configNode["log_path"].as<std::string>() + "data.csv";
+  log_path = LeggedAI::getEnv("WORKSPACE") + "/" + configNode["log_path"].as<std::string>() + "data.csv";
 
   CsvLogger& csvLogger = CsvLogger::getInstance();
   csvLogger.setCsvPath(log_path);

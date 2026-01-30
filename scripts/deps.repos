@@ -1,0 +1,33 @@
+repositories:
+  manif:
+    type: git
+    url: https://github.com/artivis/manif.git
+    version: 65166b3bfd15b1020c29f3eaf6888e1009c79aea
+  cyclonedds:
+    type: git
+    url: https://github.com/eclipse-cyclonedds/cyclonedds
+    version: releases/0.10.x
+  rmw_cyclonedds:
+    type: git
+    url: https://github.com/ros2/rmw_cyclonedds
+    version: humble
+  unitree_sdk2:
+    type: git
+    url: https://github.com/unitreerobotics/unitree_sdk2.git
+    version: main
+  unitree_ros2:
+    type: git
+    url: https://github.com/unitreerobotics/unitree_ros2.git
+    version: master
+  unitree_mujoco:
+    type: git
+    url: https://github.com/unitreerobotics/unitree_mujoco.git
+    version: main
+  logger:
+    type: git
+    url: https://github.com/Renkunzhao/logger.git
+    version: master
+  legged_base:
+    type: git
+    url: https://github.com/Renkunzhao/legged_base.git
+    version: master

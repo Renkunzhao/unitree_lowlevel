@@ -252,7 +252,7 @@ void LowLevelController::LowCmdWrite() {
         lowcmd_msg_.motor_cmd[j].tau = 0;
       }
 
-      // 如果按下START键，进入 STAND
+      // L2 + A -> STAND
       if (gamepad_.L2.pressed && gamepad_.A.on_press) {
         std::cout << "[LowLevelController] L2 & A: Standing up..." << std::endl;
         switchControllerState();
@@ -274,13 +274,14 @@ void LowLevelController::LowCmdWrite() {
         interpolateCmd(motiontime_/500., jointPos_des.data(), qj_stand_.data());
       }
 
-      // 如果按下STLECT键 -> 躺下 -> 回到IDLE
+      // L2 + A -> LIEDOWN
       if (gamepad_.L2.pressed && gamepad_.A.on_press) {
         std::cout << "[LowLevelController] L2 & A: Lying down..." << std::endl;
         switchControllerState();
         current_state_ = RobotState::LIEDOWN;
-      } else if (gamepad_.select.on_press) {
-        std::cout << "[LowLevelController] Select: Using High Controller..." << std::endl;
+      // START -> HIGH CONTROLLER
+      } else if (gamepad_.start.on_press) {
+        std::cout << "[LowLevelController] Start: Using High Controller..." << std::endl;
         switchControllerState();
         current_state_ = RobotState::HighController;
         resetHighController();
@@ -299,6 +300,7 @@ void LowLevelController::LowCmdWrite() {
     case RobotState::HighController: {
       updateHighController();
 
+      // SELECT -> LOW CONTROLLER
       if (gamepad_.select.on_press) {
         std::cout << "[LowLevelController] Select: Using Low Controller..." << std::endl;
         switchControllerState();

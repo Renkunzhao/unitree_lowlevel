@@ -41,6 +41,13 @@ sudo init 3
 sudo /etc/NX/nxserver --restart
 ```
 
+## Clone
+```bash
+mkdir -p unitree_ws/src ## important cause later scripts will clone other repo to src
+cd unitree_ws/src
+git clone https://github.com/Renkunzhao/unitree_lowlevel.git
+```
+
 ## Installation
 
 ### Docker Installation
@@ -49,6 +56,7 @@ You have to install [Docker](https://docs.docker.com/engine/install/ubuntu/) and
 
 #### Host Machine
 ```bash
+cd unitree_lowlevel/docker
 docker compose up -d --build       # build inage and start container
 docker exec -it unitree_ws bash     # attach container
 ```
@@ -60,9 +68,6 @@ sudo apt install -y python-is-python3 libopenblas-dev python3-dev python3-vcstoo
 
 ### Build
 ```bash
-mkdir -p unitree_ws/src
-cd unitree_ws/src
-git clone https://github.com/Renkunzhao/unitree_lowlevel.git
 cd unitree_lowlevel
 ./scripts/colcon-config.sh $ROS_DISTRO <Release|Debug>
 ```
@@ -98,3 +103,10 @@ High-level controller
 
 For a demonstration of how to implement a high-level controller, see [legged_rl_deploy](https://github.com/Renkunzhao/legged_rl_deploy.git).
 
+## Develop
+This repo uses vcstool pull all dependencies, uses colcon and cmake to build
+```bash
+cd $WORKSPACE
+vcs export src --exact > $WORKSPACE/src/unitree_lowlevel/scripts/deps_lock.repos
+# then manually delete all irrevelant repos in deps_lock.repos
+```

@@ -1,0 +1,46 @@
+name: unitree_ws
+
+services:
+  unitree_ws:
+    build:
+      context: .                # Build context (current directory)
+      dockerfile: Dockerfile    # Defaults to Dockerfile, can be omitted
+    image: unitree_ws:latest    # Image name
+    container_name: unitree_ws
+
+    privileged: true
+    security_opt:
+      - seccomp=unconfined
+
+    # GPU support (modern Compose)
+    gpus: all
+
+    # Environment variables
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - DISPLAY=${DISPLAY:-:0}
+      # Use a fixed path inside container
+      - XAUTHORITY=/root/.Xauthority
+      # - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
+      - QT_X11_NO_MITSHM=1
+      - WORKSPACE=/unitree_ws
+
+    # Volume mounts
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Mount host Xauthority file into container
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /dev/input:/dev/input:rwm
+      - /run/udev:/run/udev:ro
+      - ../../../:/unitree_ws
+
+
+    # Network configuration
+    network_mode: host
+    ipc: host
+    
+    # Interactive mode (equivalent to -it)
+    stdin_open: true
+    tty: true

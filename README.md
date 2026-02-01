@@ -18,6 +18,8 @@ Provides ROS 2 message packages so nodes can decode the Unitree messages. Otherw
 
 ### [unitree_mujoco](https://github.com/unitreerobotics/unitree_mujoco.git)
 Used for simulation validation before hardware deployment. Unitree MuJoCo provides the same API as the hardware, so you can switch between simulation and hardware by setting `ROS_DOMAIN_ID` and the network interface.
+
+Note: Unitre Mujoco use src/unitree_mujoco/simulate/config.yaml to config, remeber set use_joystick = 1 if you need joystick.
 ```bash
 source src/unitree_lowlevel/scripts/setup.sh <network-interface> $ROS_DISTRO
 ./src/unitree_mujoco/simulate/build/unitree_mujoco -i 0 -n $NetworkInterface
@@ -41,9 +43,17 @@ sudo /etc/NX/nxserver --restart
 
 ## Installation
 
-TODO: Dockerfile and helper scripts for easier setup.
+### Docker Installation
 
-### Dependencies
+You have to install [Docker](https://docs.docker.com/engine/install/ubuntu/) and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) first. 
+
+#### Host Machine
+```bash
+docker compose up -d --build       # build inage and start container
+docker exec -it unitree_ws bash     # attach container
+```
+
+### Dependencies (Skip this if you use docker)
 ```bash
 sudo apt install -y python-is-python3 libopenblas-dev python3-dev python3-vcstool libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev libfmt-dev
 ```

@@ -1,0 +1,105 @@
+{
+  "version": "2.0.0",
+  "inputs": [
+    {
+      "id": "BuildType",
+      "type": "pickString",
+      "description": "Select build type",
+      "options": ["Debug", "Release"],
+      "default": "Release"
+    },
+    {
+      "id": "NetworkInterface",
+      "type": "pickString",
+      "description": "Select network interface",
+      "options": ["lo", "eth0", "enp130s0", "wlp129s0f0"],
+      "default": "lo"
+    },
+    // Visualization
+    {
+      "id": "Display",
+      "type": "pickString",
+      "description": "Select display",
+      "options": ["0", "1", "1001"],
+      "default": "0"
+    },
+    // Unitree Mujoco
+    {
+      "id": "Robot",
+      "type": "pickString",
+      "description": "Select robot",
+      "options": ["go2", "g1"],
+      "default": "go2"
+    },
+    {
+      "id": "Scene",
+      "type": "pickString",
+      "description": "Select scene",
+      "options": ["scene.xml", "scene_29dof.xml"],
+      "default": "scene.xml"
+    },
+  ],
+  "tasks": [
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/colcon-config.sh $ROS_DISTRO ${input:BuildType}",
+      "group": "build",
+      "problemMatcher": []
+    },
+
+    // PlotJuggler
+    {
+      "label": "ROS2: PlotJuggler",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/ros2_task.sh",
+        "${input:NetworkInterface}",
+        "ros2", "run", "plotjuggler", "plotjuggler",
+        "--", "-l", "${env:WORKSPACE}/src/legged_base/plot/legged_state.xml"
+      ],
+      "options": {
+        "env": { "DISPLAY": ":${input:Display}" }
+      },
+      "problemMatcher": []
+    },
+
+    // Unitree
+    {
+      "label": "Unitree: Mujoco",
+      "type": "shell",
+      "command": "lib/unitree_mujoco/simulate/build/unitree_mujoco -i 0 -n ${input:NetworkInterface} -r ${input:Robot} -s ${input:Scene}",
+      "options": {
+        "cwd": "${env:WORKSPACE}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Unitree: Go2 Test",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/ros2_task.sh",
+        "${input:NetworkInterface}",
+        "${env:WORKSPACE}/build/unitree_sdk2/bin/go2_stand_example", "${input:NetworkInterface}"
+      ],
+      "problemMatcher": []
+    },
+
+    // Controller
+    {
+      "label": "ROS2: Go2 LowLevel",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/scripts/ros2_task.sh",
+        "${input:NetworkInterface}",
+        "ros2", "run", "unitree_lowlevel", "go2_lowlevel_node",
+        "${input:NetworkInterface}",
+        "${env:WORKSPACE}/src/unitree_lowlevel/config/go2.yaml"
+      ],
+      "problemMatcher": []
+    },
+  ]
+}

@@ -1,0 +1,9 @@
+repositories:
+  logger:
+    type: git
+    url: https://github.com/Renkunzhao/logger.git
+    version: master
+  legged_base:
+    type: git
+    url: https://github.com/Renkunzhao/legged_base.git
+    version: master

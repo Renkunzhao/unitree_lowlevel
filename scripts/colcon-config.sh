@@ -8,9 +8,13 @@ echo "Building with ROS_DISTRO=$ROS_DISTRO and CMAKE_BUILD_TYPE=$BUILD_TYPE"
 
 # Get project root directory
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/../../../
+echo "Project directory: $PROJECT_DIR"
+mkdir -p $PROJECT_DIR/lib
+mkdir -p $PROJECT_DIR/src
 
 # Clone repos
-vcs import $PROJECT_DIR/src < $PROJECT_DIR/src/unitree_lowlevel/scripts/deps.repos --debug -w $(nproc)
+vcs import $PROJECT_DIR/lib < $PROJECT_DIR/src/unitree_lowlevel/scripts/lib.repos --debug -w $(nproc)
+vcs import $PROJECT_DIR/src < $PROJECT_DIR/src/unitree_lowlevel/scripts/src.repos --debug -w $(nproc)
 
 # Checkout correct ROS distro branches
 cd $PROJECT_DIR/src/rmw_cyclonedds
@@ -33,7 +37,7 @@ wget -nc https://github.com/google-deepmind/mujoco/releases/download/3.3.6/mujoc
 tar -xvf mujoco-3.3.6-linux-$(uname -m).tar.gz
 
 echo "=== Building Unitree Mujoco ==="
-cd $PROJECT_DIR/src/unitree_mujoco/simulate
+cd $PROJECT_DIR/lib/unitree_mujoco/simulate
 ln -s ~/.mujoco/mujoco-3.3.6 mujoco
 mkdir build
 cd build

@@ -3,14 +3,6 @@ repositories:
     type: git
     url: https://github.com/eclipse-cyclonedds/cyclonedds
     version: 76360fb73907ce3dba397e89090a7a4ecf4f1246
-  legged_base:
-    type: git
-    url: https://github.com/Renkunzhao/legged_base.git
-    version: 4ec0441091387eee37f7a2a5afd2bac29334e4b4
-  logger:
-    type: git
-    url: https://github.com/Renkunzhao/logger.git
-    version: f7d798bcc6b5bd1376db89c7c189715fcba2c029
   manif:
     type: git
     url: https://github.com/artivis/manif.git

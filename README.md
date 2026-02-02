@@ -42,7 +42,25 @@ source src/unitree_lowlevel/scripts/setup.sh <network-interface> $ROS_DISTRO
 cd $WORKSPACE/lib
 git clone https://github.com/unitreerobotics/unitree_rl_lab.git
 
-cd g1_29dof
+cd unitree_rl_lab/deploy/robots/g1_29dof
+mkdir build
+cd build
+# if you install unitree_sdk2 in /opt/unitree_robotics
+source $WORKSPACE/src/unitree_lowlevel/scripts/unitree_sdk_path.sh
+cmake .. && make -j$(nproc)
+./g1_ctrl $NetworkInterface
+```
+
+### [unitree_rl_mjlab](https://github.com/unitreerobotics/unitree_rl_mjlab.git)
+A repository for reinforcement learning implementation for Unitree robots, based on Mujoco, with c++ deploy code provided.
+
+```bash
+source src/unitree_lowlevel/scripts/setup.sh <network-interface> $ROS_DISTRO
+
+cd $WORKSPACE/lib
+git clone https://github.com/unitreerobotics/unitree_rl_mjlab.git
+
+cd unitree_rl_mjlab/deploy/robots/g1
 mkdir build
 cd build
 # if you install unitree_sdk2 in /opt/unitree_robotics

@@ -70,9 +70,7 @@
       "label": "Unitree: Mujoco",
       "type": "shell",
       "command": "lib/unitree_mujoco/simulate/build/unitree_mujoco -i 0 -n ${input:NetworkInterface} -r ${input:Robot} -s ${input:Scene}",
-      "options": {
-        "cwd": "${env:WORKSPACE}"
-      },
+      "options": {"cwd": "${env:WORKSPACE}"},
       "problemMatcher": []
     },
     {

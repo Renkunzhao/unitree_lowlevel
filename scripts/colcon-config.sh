@@ -17,19 +17,18 @@ vcs import $PROJECT_DIR/lib < $PROJECT_DIR/src/unitree_lowlevel/scripts/lib.repo
 vcs import $PROJECT_DIR/src < $PROJECT_DIR/src/unitree_lowlevel/scripts/src.repos --debug -w $(nproc)
 
 # Checkout correct ROS distro branches
-cd $PROJECT_DIR/src/rmw_cyclonedds
+cd $PROJECT_DIR/lib/rmw_cyclonedds
 git checkout $ROS_DISTRO
 
-# Build
-cd $PROJECT_DIR
-source /opt/ros/$ROS_DISTRO/setup.bash
-colcon build --packages-up-to manif unitree_sdk2
-source install/setup.bash
-colcon build --packages-up-to unitree_lowlevel --cmake-args \
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -DCMAKE_BUILD_TYPE=$BUILD_TYPE 
+# unitree_sdk2
+cd $PROJECT_DIR/lib/unitree_sdk2
+mkdir -p build
+cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
+make install
+source $PROJECT_DIR/src/unitree_lowlevel/scripts/unitree_sdk_path.sh
 
-# MUJOCO + UNITREE MUJOCO
+# unitree_mujoco
 echo "=== Downloading Mujoco (Simulation Mode) ==="
 mkdir -p $HOME/.mujoco
 cd $HOME/.mujoco
@@ -43,3 +42,12 @@ mkdir build
 cd build
 cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE 
 make -j$(nproc)
+
+# Build
+cd $PROJECT_DIR
+source /opt/ros/$ROS_DISTRO/setup.bash
+colcon build --packages-up-to manif unitree_sdk2
+source install/setup.bash
+colcon build --packages-up-to unitree_lowlevel --cmake-args \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_BUILD_TYPE=$BUILD_TYPE 

@@ -8,9 +8,9 @@
 
 #include "unitree_lowlevel/advanced_gamepad.hpp"
 
-#include <legged_model/LeggedState.h>
-#include <legged_model/LeggedModel.h>
-#include <legged_model/Timer.h>
+#include <legged_base/LeggedState.h>
+#include <legged_base/LeggedModel.h>
+#include <legged_base/Timer.h>
 
 #include <unitree_go/msg/low_cmd.hpp>
 #include <unitree_go/msg/low_state.hpp>

@@ -13,7 +13,7 @@
     <depend>unitree_go</depend>
     <depend>unitree_api</depend>
 
-    <depend>legged_model</depend>
+    <depend>legged_base</depend>
 
     <export>
         <build_type>ament_cmake</build_type>

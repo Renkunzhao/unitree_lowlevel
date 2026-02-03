@@ -28,7 +28,7 @@ endif()
 find_package(rclcpp REQUIRED)
 find_package(unitree_go REQUIRED)
 find_package(unitree_api REQUIRED)
-find_package(legged_model REQUIRED)
+find_package(legged_base REQUIRED)
 
 ##############################
 # 3️⃣ 创建库（导出给上游用）
@@ -46,7 +46,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC
-  legged_model::legged_model
+  legged_base::legged_base
 )
 
 ament_target_dependencies(${PROJECT_NAME} PUBLIC rclcpp unitree_go unitree_api)
@@ -129,7 +129,7 @@ if(ament_cmake_FOUND)
 
     # 这两行让 ament 生态下的下游也能拿到 targets/依赖（推荐）
     ament_export_targets(${PROJECT_NAME}Targets HAS_LIBRARY_TARGET)
-    ament_export_dependencies(Eigen3 rclcpp unitree_go unitree_api legged_model)
+    ament_export_dependencies(Eigen3 rclcpp unitree_go unitree_api legged_base)
 
     ament_package()
 endif()

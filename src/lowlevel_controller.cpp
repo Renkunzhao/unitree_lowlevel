@@ -7,9 +7,9 @@
 #include <yaml-cpp/yaml.h>
 
 #include "unitree_lowlevel/motor_crc.h"
-#include <legged_model/Timer.h>
-#include <legged_model/Utils.h>
-#include <legged_model/Lie.h>
+#include <legged_base/Timer.h>
+#include <legged_base/Utils.h>
+#include <legged_base/Lie.h>
 #include <logger/CsvLogger.h>
 
 // public

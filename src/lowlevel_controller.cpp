@@ -10,7 +10,7 @@
 #include "unitree_lowlevel/motor_crc.h"
 #include <legged_base/Timer.h>
 #include <legged_base/Utils.h>
-#include <legged_base/Lie.h>
+#include <legged_base/Math.h>
 #include <logger/CsvLogger.h>
 
 // public
@@ -173,7 +173,7 @@ void LowLevelController::switchControllerState() {
 }
 
 void LowLevelController::updateLeggedState() {
-  double sgn = Lie::sgn(lowstate_msg_.imu_state.quaternion[0]);
+  double sgn = LeggedAI::sgn(lowstate_msg_.imu_state.quaternion[0]);
   real_state_.setBaseRotationFromQuaternion(Eigen::Quaternion<double>(
                                     sgn*lowstate_msg_.imu_state.quaternion[0],
                                     sgn*lowstate_msg_.imu_state.quaternion[1],

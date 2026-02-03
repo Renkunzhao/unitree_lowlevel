@@ -14,6 +14,7 @@ services:
 
     # GPU support (modern Compose)
     gpus: all
+    # runtime: nvidia # (for jetson)
 
     # Environment variables
     environment:

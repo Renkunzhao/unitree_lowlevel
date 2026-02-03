@@ -31,6 +31,9 @@ git clone https://github.com/Renkunzhao/unitree_lowlevel.git
 
 You have to install [Docker](https://docs.docker.com/engine/install/ubuntu/) and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) first. 
 
+#### Edit docker-compose.yaml (on Jetson)
+change `gpus: all` to `runtime: nvidia`
+
 #### Host Machine
 
 ```bash

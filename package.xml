@@ -11,6 +11,7 @@
     
     <depend>rclcpp</depend>
     <depend>unitree_go</depend>
+    <depend>unitree_hg</depend>
     <depend>unitree_api</depend>
 
     <depend>legged_base</depend>

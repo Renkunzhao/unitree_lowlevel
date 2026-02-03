@@ -87,7 +87,7 @@
 
     // Controller
     {
-      "label": "ROS2: Go2 LowLevel",
+      "label": "ROS2: LowLevel",
       "type": "process",
       "command": "bash",
       "args": [
@@ -95,7 +95,7 @@
         "${input:NetworkInterface}",
         "ros2", "run", "unitree_lowlevel", "go2_lowlevel_node",
         "${input:NetworkInterface}",
-        "${env:WORKSPACE}/src/unitree_lowlevel/config/go2.yaml"
+        "${env:WORKSPACE}/src/unitree_lowlevel/config/${input:Robot}.yaml"
       ],
       "problemMatcher": []
     },

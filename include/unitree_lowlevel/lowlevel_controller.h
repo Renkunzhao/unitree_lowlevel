@@ -15,6 +15,7 @@
 #include <unitree_go/msg/low_cmd.hpp>
 #include <unitree_go/msg/low_state.hpp>
 #include <unitree_go/msg/wireless_controller.hpp>
+#include <yaml-cpp/node/node.h>
 
 #define TOPIC_LOWCMD "lowcmd"
 #define TOPIC_LOWSTATE "lowstate"
@@ -73,17 +74,16 @@ protected:
   VectorXd init_qBase;
   std::vector<Eigen::Vector3d> init_footPoss_;
 
-  VectorXd qj_stand_, qj_lieDown_, tau_max_, kp_, kd_;
-  double x_max_, y_max_, z_max_, z_min_, roll_max_, pitch_min_, pitch_max_, yaw_max_;
+  VectorXd tau_max_, kp_, kd_;
 
   enum class RobotState : int {
-      Passive       = 0,
+      IDLE       = 0,
       FixStand      = 1,
-      PrePassive    = 2,
+      PreIDLE    = 2,
       HighController = 3
   };
 
-  RobotState current_state_ = RobotState::Passive;
+  RobotState current_state_ = RobotState::IDLE;
 
   static constexpr double ZERO[N_JOINTS] = {0.0f};
   bool interpolateCmd(double t,
@@ -108,5 +108,8 @@ protected:
                       const double* q_init) {
     return interpolateCmd(t, q_des, ZERO, ZERO, q_init, ZERO, kp_.data(), kd_.data());
   }
+
+private:
+  YAML::Node node_;
   
 };

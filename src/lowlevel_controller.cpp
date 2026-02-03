@@ -1,9 +1,10 @@
 #include "unitree_lowlevel/lowlevel_controller.h"
 
 #include <cstddef>
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 #include <string>
+#include <vector>
 #include <yaml-cpp/yaml.h>
 
 #include "unitree_lowlevel/motor_crc.h"
@@ -44,27 +45,16 @@ LowLevelController::LowLevelController() : rclcpp::Node("low_level_cmd_node") {
 }
 
 void LowLevelController::start(std::string config_file) {
-  auto configNode = YAML::LoadFile(config_file);
+  node_ = YAML::LoadFile(config_file);
   std::cout << "[LowLevelController] Load config from " << config_file << std::endl;
-  ll_dt_ = configNode["ll_dt"].as<double>();
-  use_sim_timer_ = configNode["use_sim_timer"].as<bool>();
-  kp_ = LeggedAI::yamlToEigenVector(configNode["PdStand"]["kp"]);
-  kd_ = LeggedAI::yamlToEigenVector(configNode["PdStand"]["kd"]);
-  qj_lieDown_ = LeggedAI::yamlToEigenVector(configNode["PdStand"]["q_liedown"]);
-  qj_stand_ = LeggedAI::yamlToEigenVector(configNode["PdStand"]["q_stand"]);
-
-  x_max_ = configNode["PdStand"]["x_max"].as<double>();
-  y_max_ = configNode["PdStand"]["y_max"].as<double>();
-  z_min_ = configNode["PdStand"]["z_min"].as<double>();
-  z_max_ = configNode["PdStand"]["z_max"].as<double>();
-  roll_max_ = configNode["PdStand"]["roll_max"].as<double>();
-  pitch_min_ = configNode["PdStand"]["pitch_min"].as<double>();
-  pitch_max_ = configNode["PdStand"]["pitch_max"].as<double>();
-  yaw_max_ = configNode["PdStand"]["yaw_max"].as<double>();
+  ll_dt_ = node_["ll_dt"].as<double>();
+  use_sim_timer_ = node_["use_sim_timer"].as<bool>();
+  kp_ = LeggedAI::yamlToEigenVector(node_["kp"]);
+  kd_ = LeggedAI::yamlToEigenVector(node_["kd"]);
 
   // Load LeggedModel
-  auto model_config_file = LeggedAI::getEnv("WORKSPACE") + "/" + configNode["model_config_file"].as<std::string>();
-  std::cout << "[LowLevelController] Load LeggedModel from " << model_config_file << std::endl; 
+  auto model_config_file = LeggedAI::getEnv("WORKSPACE") + "/" + node_["model_config_file"].as<std::string>();
+  std::cout << "[LowLevelController] Load LeggedModel from " << model_config_file << std::endl;
   robot_model_.loadConfig(YAML::LoadFile(model_config_file));
 
   // Initialize LeggedState
@@ -230,7 +220,7 @@ void LowLevelController::LowCmdWrite() {
   }
   if (gamepad_.select.pressed && gamepad_.start.on_press) {
     std::cout << "[LowLevelController] Estop end." << std::endl;
-    current_state_ = RobotState::Passive;
+    current_state_ = RobotState::IDLE;
     safetyFlag = true;
   }
 
@@ -239,75 +229,71 @@ void LowLevelController::LowCmdWrite() {
     eStop();
     return;
   }
-  
+
   updateLeggedState();
 
   switch (current_state_) {
-    case RobotState::Passive: {
-      for (int j = 0; j < 12; j++) {
-        lowcmd_msg_.motor_cmd[j].q = 0;
-        lowcmd_msg_.motor_cmd[j].dq = 0;
-        lowcmd_msg_.motor_cmd[j].kp = 0;
-        lowcmd_msg_.motor_cmd[j].kd = 0;
-        lowcmd_msg_.motor_cmd[j].tau = 0;
-      }
-
-      // L2 + A -> FixStand
-      if (gamepad_.L2.pressed && gamepad_.A.on_press) {
-        std::cout << "[LowLevelController] L2 & A: Standing up..." << std::endl;
-        switchControllerState();
-        current_state_ = RobotState::FixStand;
-      }
-      break;
+  case RobotState::IDLE: {
+    for (int j = 0; j < 12; j++) {
+      lowcmd_msg_.motor_cmd[j].q = 0;
+      lowcmd_msg_.motor_cmd[j].dq = 0;
+      lowcmd_msg_.motor_cmd[j].kp = 0;
+      lowcmd_msg_.motor_cmd[j].kd = 0;
+      lowcmd_msg_.motor_cmd[j].tau = 0;
     }
 
-    case RobotState::FixStand: {
-      if (interpolateCmd(motiontime_/500., qj_stand_.data(), init_state_.joint_pos().data())) {
-        double z_des = z_min_ + (z_max_ - z_min_) * (gamepad_.ly + 1) / 2.0;
-        double roll_des = roll_max_ * gamepad_.lx;
-        double pitch_des = gamepad_.ry > 0 ? pitch_max_ * gamepad_.ry : pitch_min_ * -gamepad_.ry;
-        double yaw_des = yaw_max_ * - gamepad_.rx;
+    // L2 + A -> FixStand
+    if (gamepad_.L2.pressed && gamepad_.A.on_press) {
+      std::cout << "[LowLevelController] L2 & A: Standing up..." << std::endl;
+      switchControllerState();
+      current_state_ = RobotState::FixStand;
+    }
+    break;
+  }
 
-        Eigen::VectorXd jointPos_des(robot_model_.nJoints());
-        robot_model_.stanceIKOrder(jointPos_des, {0, 0, z_des}, {yaw_des, pitch_des, roll_des});
-        // This line won't work since motiontime has not be setzero
-        interpolateCmd(motiontime_/500., jointPos_des.data(), qj_stand_.data());
-      }
+  case RobotState::FixStand: {
+    if (interpolateCmd(motiontime_ / 500.,
+                       node_["FixStand"]["q"].as<vector<double>>().data(),
+                       init_state_.joint_pos().data()
+                      )) {
+    }
 
-      // L2 + A -> PrePassive
-      if (gamepad_.L2.pressed && gamepad_.A.on_press) {
-        std::cout << "[LowLevelController] L2 & A: Lying down..." << std::endl;
-        switchControllerState();
-        current_state_ = RobotState::PrePassive;
+    // L2 + A -> PreIDLE
+    if (gamepad_.L2.pressed && gamepad_.A.on_press) {
+      std::cout << "[LowLevelController] L2 & A: Lying down..." << std::endl;
+      switchControllerState();
+      current_state_ = RobotState::PreIDLE;
       // START -> HIGH CONTROLLER
-      } else if (gamepad_.start.on_press) {
-        std::cout << "[LowLevelController] Start: Using High Controller..." << std::endl;
-        switchControllerState();
-        current_state_ = RobotState::HighController;
-        resetHighController();
-      }
-      break;
+    } else if (gamepad_.start.on_press) {
+      std::cout << "[LowLevelController] Start: Using High Controller..." << std::endl;
+      switchControllerState();
+      current_state_ = RobotState::HighController;
+      resetHighController();
     }
+    break;
+  }
 
-    case RobotState::PrePassive: {
-      if (interpolateCmd(motiontime_/500., qj_lieDown_.data(), init_state_.joint_pos().data())) {
-        switchControllerState();
-        current_state_ = RobotState::Passive;
-      }
-      break;
+  case RobotState::PreIDLE: {
+    if (interpolateCmd(motiontime_ / 500.,
+                       node_["PreIDLE"]["q"].as<vector<double>>().data(),
+                       init_state_.joint_pos().data())) {
+      switchControllerState();
+      current_state_ = RobotState::IDLE;
     }
+    break;
+  }
 
-    case RobotState::HighController: {
-      updateHighController();
+  case RobotState::HighController: {
+    updateHighController();
 
-      // SELECT -> LOW CONTROLLER
-      if (gamepad_.select.on_press) {
-        std::cout << "[LowLevelController] Select: Using Low Controller..." << std::endl;
-        switchControllerState();
-        current_state_ = RobotState::FixStand;
-      }
+    // SELECT -> LOW CONTROLLER
+    if (gamepad_.select.on_press) {
+      std::cout << "[LowLevelController] Select: Using Low Controller..." << std::endl;
+      switchControllerState();
+      current_state_ = RobotState::FixStand;
     }
-      break;
+  } 
+  break;
   }
 
   torqueClip();

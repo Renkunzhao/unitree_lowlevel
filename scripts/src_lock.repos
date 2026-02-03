@@ -1,0 +1,10 @@
+repositories:
+  legged_base:
+    type: git
+    url: https://github.com/Renkunzhao/legged_base.git
+    version: 7775f19b9520d98b8d690c84f9160e179f2ee493
+  logger:
+    type: git
+    url: https://github.com/Renkunzhao/logger.git
+    version: f7d798bcc6b5bd1376db89c7c189715fcba2c029
+

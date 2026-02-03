@@ -4,22 +4,15 @@
 #include <string>
 
 #include <Eigen/Dense>
+#include <yaml-cpp/node/node.h>
 #include <rclcpp/rclcpp.hpp>
 
-#include "unitree_lowlevel/advanced_gamepad.hpp"
+#include "unitree_lowlevel/legged_hal.hpp"
 
 #include <legged_base/LeggedState.h>
 #include <legged_base/LeggedModel.h>
 #include <legged_base/Timer.h>
 
-#include <unitree_go/msg/low_cmd.hpp>
-#include <unitree_go/msg/low_state.hpp>
-#include <unitree_go/msg/wireless_controller.hpp>
-#include <yaml-cpp/node/node.h>
-
-#define TOPIC_LOWCMD "lowcmd"
-#define TOPIC_LOWSTATE "lowstate"
-#define TOPIC_JOYSTICK "wirelesscontroller"
 #define N_JOINTS 12
 
 class LowLevelController : public rclcpp::Node {
@@ -32,19 +25,12 @@ public:
   void start(std::string config_file);
 
 protected:
-  void InitLowCmd();
-  void LowCmdWrite();
+  void update();
 
-  size_t lowcmd_msg_num_ = 0;
-  unitree_go::msg::LowCmd lowcmd_msg_;      // default init
-  unitree_go::msg::LowState lowstate_msg_;  // default init
-  unitree_go::msg::WirelessController joystick_msg_;
+  JointCommand jnt_cmd_;
   unitree::common::Gamepad gamepad_;
-  rclcpp::Publisher<unitree_go::msg::LowCmd>::SharedPtr lowcmd_pub_;
-  rclcpp::Subscription<unitree_go::msg::LowState>::SharedPtr lowstate_sub_;
-  rclcpp::Subscription<unitree_go::msg::WirelessController>::SharedPtr joystick_sub_;
-
-  std::mutex joystick_mtx;
+  
+  std::unique_ptr<ILeggedAdapter> legged_adapter_;
 
   double ll_dt_ = 0.002;
   bool use_sim_timer_ = false;

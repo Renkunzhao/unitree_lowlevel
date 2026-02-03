@@ -7,7 +7,7 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
-#include "unitree_lowlevel/motor_crc.h"
+#include "unitree_lowlevel/adapter/go2_adapter.hpp"
 #include <legged_base/Timer.h>
 #include <legged_base/Utils.h>
 #include <legged_base/Math.h>
@@ -16,32 +16,6 @@
 // public
 
 LowLevelController::LowLevelController() : rclcpp::Node("low_level_cmd_node") {
-  InitLowCmd();
-
-  lowcmd_pub_ = this->create_publisher<unitree_go::msg::LowCmd>(TOPIC_LOWCMD, 10);
-  lowstate_sub_ = this->create_subscription<unitree_go::msg::LowState>(
-      TOPIC_LOWSTATE, 10, [this](const unitree_go::msg::LowState::SharedPtr msg) {
-        lowcmd_msg_num_++;
-        lowstate_msg_ = *msg;
-        if (lowcmd_msg_num_ > 10) {
-          if (use_sim_timer_ && sim_timer_) {
-            sim_timer_->step(lowstate_msg_.tick);
-          } else if (!use_sim_timer_) {
-            if (!sim_timer_->wall_timer_running()) {
-              sim_timer_->start_wall_timer();
-            }
-          }
-        }
-      });
-  joystick_sub_ = this->create_subscription<unitree_go::msg::WirelessController>(
-      TOPIC_JOYSTICK, 10, [this](const unitree_go::msg::WirelessController::SharedPtr msg) {
-        std::lock_guard<std::mutex> lock(joystick_mtx);
-        joystick_msg_ = *msg;
-        // std::cout << "[LowLevelController] Joystick msg received." << std::endl;
-      });
-
-  gamepad_.smooth = 0.2;
-  gamepad_.dead_zone = 0.5;
 }
 
 void LowLevelController::start(std::string config_file) {
@@ -57,6 +31,10 @@ void LowLevelController::start(std::string config_file) {
   std::cout << "[LowLevelController] Load LeggedModel from " << model_config_file << std::endl;
   robot_model_.loadConfig(YAML::LoadFile(model_config_file));
 
+  legged_adapter_ = std::make_unique<Go2Adapter>();
+  legged_adapter_->setup(*this);
+  jnt_cmd_.resizeZero(robot_model_.nJoints());
+  
   // Initialize LeggedState
   des_state_.init(robot_model_.nJoints(), robot_model_.jointOrder(), robot_model_.contact3DofNames(), {});
   real_state_.init(robot_model_.nJoints(), robot_model_.jointOrder(), robot_model_.contact3DofNames(), {});
@@ -71,32 +49,15 @@ void LowLevelController::start(std::string config_file) {
   if (use_sim_timer_) {
     sim_timer_ = std::make_unique<LeggedAI::Timer>(int(ll_dt_ * 1000),  
         [this](int64_t) {
-          LowCmdWrite();
+          update();
         }, LeggedAI::Timer::Mode::SlowSim);
   } else {
     sim_timer_ = std::make_unique<LeggedAI::Timer>(int(ll_dt_ * 1000),  
         [this](int64_t) {
-          LowCmdWrite();
+          update();
         }, LeggedAI::Timer::Mode::Realtime);
   }
-}
-
-// private
-void LowLevelController::InitLowCmd() {
-    lowcmd_msg_.head[0] = 0xFE;
-    lowcmd_msg_.head[1] = 0xEF;
-    lowcmd_msg_.level_flag = 0xFF;
-    lowcmd_msg_.gpio = 0;
-
-    for(int i=0; i<20; i++)
-    {
-        lowcmd_msg_.motor_cmd[i].mode = (0x01);   // motor switch to servo (PMSM) mode
-        lowcmd_msg_.motor_cmd[i].q = (PosStopF);
-        lowcmd_msg_.motor_cmd[i].kp = (0);
-        lowcmd_msg_.motor_cmd[i].dq = (VelStopF);
-        lowcmd_msg_.motor_cmd[i].kd = (0);
-        lowcmd_msg_.motor_cmd[i].tau = (0);
-    }
+  sim_timer_->start_wall_timer();
 }
 
 bool LowLevelController::interpolateCmd(double t,
@@ -115,11 +76,11 @@ bool LowLevelController::interpolateCmd(double t,
         double dq_ref  =  LeggedAI::lerp(t, dq_init[j], dq_des[j]);
 
         // 写入命令
-        lowcmd_msg_.motor_cmd[j].q   = q_ref;
-        lowcmd_msg_.motor_cmd[j].dq  = dq_ref;
-        lowcmd_msg_.motor_cmd[j].kp  = kp[j];
-        lowcmd_msg_.motor_cmd[j].kd  = kd[j];
-        lowcmd_msg_.motor_cmd[j].tau = tau_des[j];  // 直接使用外部前馈力矩
+        jnt_cmd_.q[j]   = q_ref;
+        jnt_cmd_.dq[j]  = dq_ref;
+        jnt_cmd_.kp[j]  = kp[j];
+        jnt_cmd_.kd[j]  = kd[j];
+        jnt_cmd_.tau[j] = tau_des[j];  // 直接使用外部前馈力矩
     }
 
     return LeggedAI::smoothstep(t) == 1.0;
@@ -127,25 +88,22 @@ bool LowLevelController::interpolateCmd(double t,
 
 void LowLevelController::eStop() {
   for (int j = 0; j < 12; j++) {
-    lowcmd_msg_.motor_cmd[j].q = 0;
-    lowcmd_msg_.motor_cmd[j].dq = 0;
-    lowcmd_msg_.motor_cmd[j].kp = 0;
-    lowcmd_msg_.motor_cmd[j].kd = 3.0;
-    lowcmd_msg_.motor_cmd[j].tau = 0;
+    jnt_cmd_.q[j] = 0;
+    jnt_cmd_.dq[j]  = 0;
+    jnt_cmd_.kp[j]  = 0;
+    jnt_cmd_.kd[j]  = 3.0;
+    jnt_cmd_.tau[j]  = 0;
   }
 
-  get_crc(lowcmd_msg_);  // Check motor cmd crc
-  lowcmd_pub_->publish(lowcmd_msg_);
+  legged_adapter_->sendJointCmd(jnt_cmd_);
 }
 
 void LowLevelController::torqueClip(){
   for (size_t j=0; j<N_JOINTS; ++j) {
-    auto& cmd = lowcmd_msg_.motor_cmd[j];
-    auto& state = lowstate_msg_.motor_state[j];
-    double tau_eff = cmd.tau + cmd.kp * (cmd.q - state.q) + cmd.kd * (cmd.dq - state.dq);
+    double tau_eff = jnt_cmd_.tau[j] + jnt_cmd_.kp[j] * (jnt_cmd_.q[j] - real_state_.joint_pos()[j]) + jnt_cmd_.kd[j] * (jnt_cmd_.dq[j] - real_state_.joint_vel()[j]);
     const double lim = robot_model_.tauMaxOrder()[j];
     const double tau_eff_clamped = std::clamp(tau_eff, -lim, lim);
-    cmd.tau += (tau_eff_clamped - tau_eff);
+    jnt_cmd_.tau[j] += (tau_eff_clamped - tau_eff);
     if (tau_eff_clamped!=tau_eff) {
       // std::cout << "[LowLevelController] Leg " << j << " torque out of range [" << tau_eff << "], applying clip." << std::endl;
     }
@@ -172,47 +130,12 @@ void LowLevelController::switchControllerState() {
             << std::endl; 
 }
 
-void LowLevelController::updateLeggedState() {
-  double sgn = LeggedAI::sgn(lowstate_msg_.imu_state.quaternion[0]);
-  real_state_.setBaseRotationFromQuaternion(Eigen::Quaternion<double>(
-                                    sgn*lowstate_msg_.imu_state.quaternion[0],
-                                    sgn*lowstate_msg_.imu_state.quaternion[1],
-                                    sgn*lowstate_msg_.imu_state.quaternion[2],
-                                    sgn*lowstate_msg_.imu_state.quaternion[3]));
-
-  real_state_.setBaseAngularVelocityB(Eigen::Vector3d(
-                                    lowstate_msg_.imu_state.gyroscope[0],
-                                    lowstate_msg_.imu_state.gyroscope[1],
-                                    lowstate_msg_.imu_state.gyroscope[2]));
-
-  Eigen::VectorXd joint_pos(12), joint_vel(12), joint_tau(12);
-  for(int i=0;i<12;i++) {
-    joint_pos[i] = lowstate_msg_.motor_state[i].q;
-    joint_vel[i] = lowstate_msg_.motor_state[i].dq;
-    joint_tau[i] = lowstate_msg_.motor_state[i].tau_est;
-  }
-  real_state_.setJointPos(joint_pos, robot_model_.jointOrder());
-  real_state_.setJointVel(joint_vel, robot_model_.jointOrder());
-  real_state_.setJointTau(joint_tau, robot_model_.jointOrder());
-
-  Eigen::VectorXd foot_force = Eigen::VectorXd::Zero(12);
-  for(size_t i=0;i<robot_model_.nContacts3Dof();i++) {
-    foot_force[3*i+2] = lowstate_msg_.foot_force[i];
-  }
-  real_state_.setEE3DofFc(foot_force, robot_model_.contact3DofNames());
-
-  updateBaseState();
-}
-
-void LowLevelController::LowCmdWrite() {
+void LowLevelController::update() {
   auto start = std::chrono::steady_clock::now();
 
   motiontime_++;
 
-  {
-    std::lock_guard<std::mutex> lock(joystick_mtx);
-    gamepad_.Update(joystick_msg_);
-  }
+  legged_adapter_->getGamePad(gamepad_);
 
   if (gamepad_.L2.pressed && gamepad_.B.on_press) {
     std::cout << "[LowLevelController] Estop start." << std::endl;
@@ -230,16 +153,17 @@ void LowLevelController::LowCmdWrite() {
     return;
   }
 
-  updateLeggedState();
+  legged_adapter_->getLeggedState(real_state_);
+  updateBaseState();
 
   switch (current_state_) {
   case RobotState::IDLE: {
     for (int j = 0; j < 12; j++) {
-      lowcmd_msg_.motor_cmd[j].q = 0;
-      lowcmd_msg_.motor_cmd[j].dq = 0;
-      lowcmd_msg_.motor_cmd[j].kp = 0;
-      lowcmd_msg_.motor_cmd[j].kd = 0;
-      lowcmd_msg_.motor_cmd[j].tau = 0;
+      jnt_cmd_.q[j]   = 0;
+      jnt_cmd_.dq[j]  = 0;
+      jnt_cmd_.kp[j]  = 0;
+      jnt_cmd_.kd[j]  = 0;
+      jnt_cmd_.tau[j] = 0;
     }
 
     // L2 + A -> FixStand
@@ -297,8 +221,7 @@ void LowLevelController::LowCmdWrite() {
   }
 
   torqueClip();
-  get_crc(lowcmd_msg_);
-  lowcmd_pub_->publish(lowcmd_msg_);
+  legged_adapter_->sendJointCmd(jnt_cmd_);
 
   // 统计
   duration_ms_ = duration<double, std::milli>(steady_clock::now() - start).count();
@@ -311,7 +234,7 @@ void LowLevelController::LowCmdWrite() {
 
 void LowLevelController::log(){
   CsvLogger& csvLogger = CsvLogger::getInstance();
-  csvLogger.update("sim_time", lowstate_msg_.tick*0.001);
+  // csvLogger.update("sim_time", lowstate_msg_.tick*0.001);
   csvLogger.update("controller_time", loop_cnt_*ll_dt_);
   csvLogger.update("state", static_cast<int>(current_state_));
   csvLogger.update("loop_time", duration_ms_);

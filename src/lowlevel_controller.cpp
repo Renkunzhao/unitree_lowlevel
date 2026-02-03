@@ -230,7 +230,7 @@ void LowLevelController::LowCmdWrite() {
   }
   if (gamepad_.select.pressed && gamepad_.start.on_press) {
     std::cout << "[LowLevelController] Estop end." << std::endl;
-    current_state_ = RobotState::IDLE;
+    current_state_ = RobotState::Passive;
     safetyFlag = true;
   }
 
@@ -243,7 +243,7 @@ void LowLevelController::LowCmdWrite() {
   updateLeggedState();
 
   switch (current_state_) {
-    case RobotState::IDLE: {
+    case RobotState::Passive: {
       for (int j = 0; j < 12; j++) {
         lowcmd_msg_.motor_cmd[j].q = 0;
         lowcmd_msg_.motor_cmd[j].dq = 0;
@@ -252,16 +252,16 @@ void LowLevelController::LowCmdWrite() {
         lowcmd_msg_.motor_cmd[j].tau = 0;
       }
 
-      // L2 + A -> STAND
+      // L2 + A -> FixStand
       if (gamepad_.L2.pressed && gamepad_.A.on_press) {
         std::cout << "[LowLevelController] L2 & A: Standing up..." << std::endl;
         switchControllerState();
-        current_state_ = RobotState::STAND;
+        current_state_ = RobotState::FixStand;
       }
       break;
     }
 
-    case RobotState::STAND: {
+    case RobotState::FixStand: {
       if (interpolateCmd(motiontime_/500., qj_stand_.data(), init_state_.joint_pos().data())) {
         double z_des = z_min_ + (z_max_ - z_min_) * (gamepad_.ly + 1) / 2.0;
         double roll_des = roll_max_ * gamepad_.lx;
@@ -274,11 +274,11 @@ void LowLevelController::LowCmdWrite() {
         interpolateCmd(motiontime_/500., jointPos_des.data(), qj_stand_.data());
       }
 
-      // L2 + A -> LIEDOWN
+      // L2 + A -> PrePassive
       if (gamepad_.L2.pressed && gamepad_.A.on_press) {
         std::cout << "[LowLevelController] L2 & A: Lying down..." << std::endl;
         switchControllerState();
-        current_state_ = RobotState::LIEDOWN;
+        current_state_ = RobotState::PrePassive;
       // START -> HIGH CONTROLLER
       } else if (gamepad_.start.on_press) {
         std::cout << "[LowLevelController] Start: Using High Controller..." << std::endl;
@@ -289,10 +289,10 @@ void LowLevelController::LowCmdWrite() {
       break;
     }
 
-    case RobotState::LIEDOWN: {
+    case RobotState::PrePassive: {
       if (interpolateCmd(motiontime_/500., qj_lieDown_.data(), init_state_.joint_pos().data())) {
         switchControllerState();
-        current_state_ = RobotState::IDLE;
+        current_state_ = RobotState::Passive;
       }
       break;
     }
@@ -304,7 +304,7 @@ void LowLevelController::LowCmdWrite() {
       if (gamepad_.select.on_press) {
         std::cout << "[LowLevelController] Select: Using Low Controller..." << std::endl;
         switchControllerState();
-        current_state_ = RobotState::STAND;
+        current_state_ = RobotState::FixStand;
       }
     }
       break;
@@ -333,11 +333,4 @@ void LowLevelController::log(){
   csvLogger.update("exec_freq", sim_timer_->exec_freq());
 
   real_state_.log("real_");
-  csvLogger.update("com", robot_model_.com(real_state_.custom_state("q_pin")));
-  csvLogger.update("vcom", robot_model_.vcom(
-                                        real_state_.custom_state("q_pin"),
-                                        real_state_.custom_state("v_pin")));
-  csvLogger.update("hcom", robot_model_.hcom(
-                                        real_state_.custom_state("q_pin"),
-                                        real_state_.custom_state("v_pin")));
 }

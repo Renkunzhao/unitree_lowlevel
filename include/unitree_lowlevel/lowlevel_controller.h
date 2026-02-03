@@ -77,13 +77,13 @@ protected:
   double x_max_, y_max_, z_max_, z_min_, roll_max_, pitch_min_, pitch_max_, yaw_max_;
 
   enum class RobotState : int {
-      IDLE          = 0,
-      STAND         = 1,
-      LIEDOWN       = 2,
+      Passive       = 0,
+      FixStand      = 1,
+      PrePassive    = 2,
       HighController = 3
   };
 
-  RobotState current_state_ = RobotState::IDLE;
+  RobotState current_state_ = RobotState::Passive;
 
   static constexpr double ZERO[N_JOINTS] = {0.0f};
   bool interpolateCmd(double t,

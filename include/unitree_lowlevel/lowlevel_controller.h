@@ -71,30 +71,6 @@ protected:
 
   RobotState current_state_ = RobotState::IDLE;
 
-  static constexpr double ZERO[N_JOINTS] = {0.0f};
-  bool interpolateCmd(double t,
-                      const double* q_des,
-                      const double* dq_des,
-                      const double* tau_des,
-                      const double* q_init,
-                      const double* dq_init,
-                      const double* kp,
-                      const double* kd);
-                      
-  bool interpolateCmd(double t,
-                      const double* q_des,
-                      const double* q_init,
-                      const double* kp,
-                      const double* kd) {
-    return interpolateCmd(t, q_des, ZERO, ZERO, q_init, ZERO, kp, kd);
-  }
-
-  bool interpolateCmd(double t,
-                      const double* q_des,
-                      const double* q_init) {
-    return interpolateCmd(t, q_des, ZERO, ZERO, q_init, ZERO, kp_.data(), kd_.data());
-  }
-
 private:
   YAML::Node node_;
   

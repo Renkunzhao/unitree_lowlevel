@@ -8,6 +8,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "unitree_lowlevel/adapter/go2_adapter.hpp"
+#include "unitree_lowlevel/legged_hal.hpp"
 #include <legged_base/Timer.h>
 #include <legged_base/Utils.h>
 #include <legged_base/Math.h>
@@ -58,32 +59,6 @@ void LowLevelController::start(std::string config_file) {
         }, legged_base::Timer::Mode::Realtime);
   }
   sim_timer_->start_wall_timer();
-}
-
-bool LowLevelController::interpolateCmd(double t,
-                                     const double* q_des,
-                                     const double* dq_des,
-                                     const double* tau_des,
-                                     const double* q_init,
-                                     const double* dq_init,
-                                     const double* kp,
-                                     const double* kd) {
-    // ===== 插值并生成命令 =====
-    for (int j = 0; j < robot_model_.nJoints(); ++j)
-    {
-        // 线性插值位置和速度
-        double q_ref  =  legged_base::lerp(t, q_init[j], q_des[j]);
-        double dq_ref  =  legged_base::lerp(t, dq_init[j], dq_des[j]);
-
-        // 写入命令
-        jnt_cmd_.q[j]   = q_ref;
-        jnt_cmd_.dq[j]  = dq_ref;
-        jnt_cmd_.kp[j]  = kp[j];
-        jnt_cmd_.kd[j]  = kd[j];
-        jnt_cmd_.tau[j] = tau_des[j];  // 直接使用外部前馈力矩
-    }
-
-    return legged_base::smoothstep(t) == 1.0;
 }
 
 void LowLevelController::eStop() {
@@ -176,11 +151,9 @@ void LowLevelController::update() {
   }
 
   case RobotState::FixStand: {
-    if (interpolateCmd(motiontime_ / 500.,
-                       node_["FixStand"]["q"].as<vector<double>>().data(),
-                       init_state_.joint_pos().data()
-                      )) {
-    }
+    jnt_cmd_ = JointCommand::smoothInterp(motiontime_ / 500.,
+                       legged_base::yamlToEigenVec(node_["FixStand"]["q"]),
+                       init_state_.joint_pos(), kp_, kd_);
 
     // L2 + A -> PreIDLE
     if (gamepad_.L2.pressed && gamepad_.A.on_press) {
@@ -198,9 +171,10 @@ void LowLevelController::update() {
   }
 
   case RobotState::PreIDLE: {
-    if (interpolateCmd(motiontime_ / 500.,
-                       node_["PreIDLE"]["q"].as<vector<double>>().data(),
-                       init_state_.joint_pos().data())) {
+    jnt_cmd_ = JointCommand::smoothInterp(motiontime_ / 500.,
+                          legged_base::yamlToEigenVec(node_["PreIDLE"]["q"]),
+                          init_state_.joint_pos(), kp_, kd_);
+    if (motiontime_/500.>=1) {
       switchControllerState();
       current_state_ = RobotState::IDLE;
     }

@@ -23,11 +23,11 @@ void LowLevelController::start(std::string config_file) {
   std::cout << "[LowLevelController] Load config from " << config_file << std::endl;
   ll_dt_ = node_["ll_dt"].as<double>();
   use_sim_timer_ = node_["use_sim_timer"].as<bool>();
-  kp_ = LeggedAI::yamlToEigenVector(node_["kp"]);
-  kd_ = LeggedAI::yamlToEigenVector(node_["kd"]);
+  kp_ = legged_base::yamlToEigenVec(node_["kp"]);
+  kd_ = legged_base::yamlToEigenVec(node_["kd"]);
 
   // Load LeggedModel
-  auto model_config_file = LeggedAI::getEnv("WORKSPACE") + "/" + node_["model_config_file"].as<std::string>();
+  auto model_config_file = legged_base::getEnv("WORKSPACE") + "/" + node_["model_config_file"].as<std::string>();
   std::cout << "[LowLevelController] Load LeggedModel from " << model_config_file << std::endl;
   robot_model_.loadConfig(YAML::LoadFile(model_config_file));
 
@@ -47,15 +47,15 @@ void LowLevelController::start(std::string config_file) {
 
   /*loop publishing thread*/
   if (use_sim_timer_) {
-    sim_timer_ = std::make_unique<LeggedAI::Timer>(int(ll_dt_ * 1000),  
+    sim_timer_ = std::make_unique<legged_base::Timer>(int(ll_dt_ * 1000),  
         [this](int64_t) {
           update();
-        }, LeggedAI::Timer::Mode::SlowSim);
+        }, legged_base::Timer::Mode::SlowSim);
   } else {
-    sim_timer_ = std::make_unique<LeggedAI::Timer>(int(ll_dt_ * 1000),  
+    sim_timer_ = std::make_unique<legged_base::Timer>(int(ll_dt_ * 1000),  
         [this](int64_t) {
           update();
-        }, LeggedAI::Timer::Mode::Realtime);
+        }, legged_base::Timer::Mode::Realtime);
   }
   sim_timer_->start_wall_timer();
 }
@@ -69,11 +69,11 @@ bool LowLevelController::interpolateCmd(double t,
                                      const double* kp,
                                      const double* kd) {
     // ===== 插值并生成命令 =====
-    for (int j = 0; j < N_JOINTS; ++j)
+    for (int j = 0; j < robot_model_.nJoints(); ++j)
     {
         // 线性插值位置和速度
-        double q_ref  =  LeggedAI::lerp(t, q_init[j], q_des[j]);
-        double dq_ref  =  LeggedAI::lerp(t, dq_init[j], dq_des[j]);
+        double q_ref  =  legged_base::lerp(t, q_init[j], q_des[j]);
+        double dq_ref  =  legged_base::lerp(t, dq_init[j], dq_des[j]);
 
         // 写入命令
         jnt_cmd_.q[j]   = q_ref;
@@ -83,7 +83,7 @@ bool LowLevelController::interpolateCmd(double t,
         jnt_cmd_.tau[j] = tau_des[j];  // 直接使用外部前馈力矩
     }
 
-    return LeggedAI::smoothstep(t) == 1.0;
+    return legged_base::smoothstep(t) == 1.0;
 }
 
 void LowLevelController::eStop() {
@@ -99,7 +99,7 @@ void LowLevelController::eStop() {
 }
 
 void LowLevelController::torqueClip(){
-  for (size_t j=0; j<N_JOINTS; ++j) {
+  for (size_t j=0; j < robot_model_.nJoints(); ++j) {
     double tau_eff = jnt_cmd_.tau[j] + jnt_cmd_.kp[j] * (jnt_cmd_.q[j] - real_state_.joint_pos()[j]) + jnt_cmd_.kd[j] * (jnt_cmd_.dq[j] - real_state_.joint_vel()[j]);
     const double lim = robot_model_.tauMaxOrder()[j];
     const double tau_eff_clamped = std::clamp(tau_eff, -lim, lim);

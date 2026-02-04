@@ -34,7 +34,7 @@ protected:
 
   double ll_dt_ = 0.002;
   bool use_sim_timer_ = false;
-  std::unique_ptr<LeggedAI::Timer> sim_timer_;
+  std::unique_ptr<legged_base::Timer> sim_timer_;
 
   // statistic info for logging and debugging
   std::chrono::steady_clock::time_point start_wall_;

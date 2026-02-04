@@ -10,7 +10,7 @@
 #include <unitree_go/msg/low_cmd.hpp>
 #include <unitree_go/msg/low_state.hpp>
 #include <unitree_go/msg/wireless_controller.hpp>
-#include <legged_base/Math.h>   // LeggedAI::sgn
+#include <legged_base/Math.h>   // legged_base::sgn
 
 #define TOPIC_LOWCMD "lowcmd"
 #define TOPIC_LOWSTATE "lowstate"
@@ -109,7 +109,7 @@ private:
 
   void updateLeggedState(LeggedState& legged_state) {
     // ===== IMU =====
-    const double sgn = LeggedAI::sgn(lowstate_msg_.imu_state.quaternion[0]);
+    const double sgn = legged_base::sgn(lowstate_msg_.imu_state.quaternion[0]);
     Eigen::Quaterniond quat_wxyz(
       sgn * lowstate_msg_.imu_state.quaternion[0],
       sgn * lowstate_msg_.imu_state.quaternion[1],

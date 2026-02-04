@@ -2,7 +2,7 @@
 #include <Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 
-#include "unitree_lowlevel/advanced_gamepad.hpp"
+#include "unitree_lowlevel/gamepad.hpp"
 #include <legged_base/LeggedState.h>
 #include <legged_base/Utils.h>
 

@@ -36,7 +36,6 @@ find_package(legged_base REQUIRED)
 ##############################
 add_library(${PROJECT_NAME} STATIC
     src/lowlevel_controller.cpp
-    src/motor_crc.cpp
 )
 
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

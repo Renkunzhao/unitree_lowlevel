@@ -1,3 +1,5 @@
+robot: go2
+
 model_config_file:
   src/legged_base/config/go2-config.yaml
 log_path:

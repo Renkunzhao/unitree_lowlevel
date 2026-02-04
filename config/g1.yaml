@@ -1,3 +1,5 @@
+robot: g1
+
 model_config_file:
   src/legged_base/config/g1_29dof-config.yaml
 

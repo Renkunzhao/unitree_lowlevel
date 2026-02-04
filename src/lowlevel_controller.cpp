@@ -8,6 +8,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "unitree_lowlevel/adapter/go2_adapter.hpp"
+#include "unitree_lowlevel/adapter/g1_adapter.hpp"
 #include "unitree_lowlevel/legged_hal.hpp"
 #include <legged_base/Timer.h>
 #include <legged_base/Utils.h>
@@ -17,6 +18,8 @@
 // public
 
 LowLevelController::LowLevelController() : rclcpp::Node("low_level_cmd_node") {
+  gamepad_.smooth = 0.2;
+  gamepad_.dead_zone = 0.5;
 }
 
 void LowLevelController::start(std::string config_file) {
@@ -32,13 +35,31 @@ void LowLevelController::start(std::string config_file) {
   std::cout << "[LowLevelController] Load LeggedModel from " << model_config_file << std::endl;
   robot_model_.loadConfig(YAML::LoadFile(model_config_file));
 
-  legged_adapter_ = std::make_unique<Go2Adapter>();
+  // Adapter selection: prefer explicit YAML, else infer from model DoF.
+  const std::string robot = node_["robot"] ? node_["robot"].as<std::string>() : std::string("auto");
+  if (robot == "g1") {
+    legged_adapter_ = std::make_unique<G1Adapter>();
+  } else if (robot == "go2") {
+    legged_adapter_ = std::make_unique<Go2Adapter>();
+  } else {
+    if (robot_model_.nJoints() > 12) {
+      legged_adapter_ = std::make_unique<G1Adapter>();
+    } else {
+      legged_adapter_ = std::make_unique<Go2Adapter>();
+    }
+  }
   legged_adapter_->setup(*this);
   jnt_cmd_.resizeZero(robot_model_.nJoints());
   
   // Initialize LeggedState
-  des_state_.init(robot_model_.nJoints(), robot_model_.jointOrder(), robot_model_.contact3DofNames(), {});
-  real_state_.init(robot_model_.nJoints(), robot_model_.jointOrder(), robot_model_.contact3DofNames(), {});
+  des_state_.init(robot_model_.nJoints(), 
+                  robot_model_.jointOrder(), 
+                  robot_model_.contact3DofNames(), 
+                  robot_model_.contact6DofNames());
+  real_state_.init(robot_model_.nJoints(), 
+                  robot_model_.jointOrder(), 
+                  robot_model_.contact3DofNames(), 
+                  robot_model_.contact6DofNames());
   robot_model_.creatPinoState(des_state_);
   robot_model_.creatPinoState(real_state_);
 
@@ -62,7 +83,7 @@ void LowLevelController::start(std::string config_file) {
 }
 
 void LowLevelController::eStop() {
-  for (int j = 0; j < 12; j++) {
+  for (size_t j = 0; j < robot_model_.nJoints(); j++) {
     jnt_cmd_.q[j] = 0;
     jnt_cmd_.dq[j]  = 0;
     jnt_cmd_.kp[j]  = 0;
@@ -90,18 +111,12 @@ void LowLevelController::switchControllerState() {
   init_state_ = real_state_;
   init_basePos_ = init_state_.base_pos();
   init_baseEulerZYX_ = init_state_.base_eulerZYX();
-  init_footPoss_ = robot_model_.contact3DofPoss(init_state_.custom_state("q_pin"));    // note: this is in order of LeggedModel.contact3DofNames
   init_com_ = robot_model_.com(init_state_.custom_state("q_pin"));
   init_qBase.resize(7);
   init_qBase << real_state_.base_pos(), real_state_.base_quat().coeffs();
   std::cout << "[DapcController]" 
             << "\ninit base pos: " << init_state_.base_pos().transpose() 
             << "\ninit com  pos: " << init_com_.transpose()
-            << "\ninit footPoss: " 
-            << init_footPoss_[0].transpose()
-            << init_footPoss_[1].transpose()
-            << init_footPoss_[2].transpose()
-            << init_footPoss_[3].transpose()
             << std::endl; 
 }
 
@@ -133,7 +148,7 @@ void LowLevelController::update() {
 
   switch (current_state_) {
   case RobotState::IDLE: {
-    for (int j = 0; j < 12; j++) {
+    for (size_t j = 0; j < robot_model_.nJoints(); j++) {
       jnt_cmd_.q[j]   = 0;
       jnt_cmd_.dq[j]  = 0;
       jnt_cmd_.kp[j]  = 0;
@@ -143,7 +158,7 @@ void LowLevelController::update() {
 
     // L2 + A -> FixStand
     if (gamepad_.L2.pressed && gamepad_.A.on_press) {
-      std::cout << "[LowLevelController] L2 & A: Standing up..." << std::endl;
+      std::cout << "[LowLevelController] L2 & A: FixStand..." << std::endl;
       switchControllerState();
       current_state_ = RobotState::FixStand;
     }
@@ -157,7 +172,7 @@ void LowLevelController::update() {
 
     // L2 + A -> PreIDLE
     if (gamepad_.L2.pressed && gamepad_.A.on_press) {
-      std::cout << "[LowLevelController] L2 & A: Lying down..." << std::endl;
+      std::cout << "[LowLevelController] L2 & A: PreIDLE..." << std::endl;
       switchControllerState();
       current_state_ = RobotState::PreIDLE;
       // START -> HIGH CONTROLLER

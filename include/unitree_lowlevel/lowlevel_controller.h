@@ -13,8 +13,6 @@
 #include <legged_base/LeggedModel.h>
 #include <legged_base/Timer.h>
 
-#define N_JOINTS 12
-
 class LowLevelController : public rclcpp::Node {
 public:
   LowLevelController();
@@ -58,14 +56,13 @@ protected:
   LeggedModel robot_model_;
   Eigen::Vector3d init_com_, init_basePos_, init_baseEulerZYX_;
   VectorXd init_qBase;
-  std::vector<Eigen::Vector3d> init_footPoss_;
 
   VectorXd tau_max_, kp_, kd_;
 
   enum class RobotState : int {
-      IDLE       = 0,
-      FixStand      = 1,
-      PreIDLE    = 2,
+      IDLE           = 0,
+      FixStand       = 1,
+      PreIDLE        = 2,
       HighController = 3
   };
 

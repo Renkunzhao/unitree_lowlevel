@@ -26,7 +26,7 @@ mkdir -p build
 cd build
 cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
 make -j$(nproc)
-make install
+sudo make install
 source $PROJECT_DIR/src/unitree_lowlevel/scripts/unitree_sdk_path.sh
 
 # unitree_mujoco

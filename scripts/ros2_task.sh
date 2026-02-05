@@ -12,7 +12,8 @@ if [[ $# -lt 2 ]]; then
 fi
 
 NET_IF="$1"
-shift
+ROS_DISTRO="$2"
+shift 2
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SETUP_SH="$SCRIPT_DIR/setup.sh"

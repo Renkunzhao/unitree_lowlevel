@@ -60,8 +60,25 @@ class G1Adapter final : public ILeggedAdapter {
     msg.crc = raw.crc;
   }
 
+  enum JointIdx {
+    WAIST_YAW = 12,
+    WAIST_PITCH = 13,
+    WAIST_ROLL = 14,
+  };
+
 public:
   G1Adapter() {};
+
+  // Since G1 imu is installed on pelvis, this function calculates torso quaternion from it and waist joint angles.
+  static Eigen::Quaternionf getTorsoQuatFromImuAndWaist(
+      const Eigen::Quaternionf& imu_quat_w,
+      const Eigen::VectorXf& joint_pos) {
+    Eigen::Quaternionf torso_quat = imu_quat_w
+        * Eigen::AngleAxisf(joint_pos[WAIST_YAW], Eigen::Vector3f::UnitZ())
+        * Eigen::AngleAxisf(joint_pos[WAIST_PITCH], Eigen::Vector3f::UnitX())
+        * Eigen::AngleAxisf(joint_pos[WAIST_ROLL], Eigen::Vector3f::UnitY());
+    return torso_quat;
+  }
 
   void setup(rclcpp::Node &node) override {
     lowcmd_pub_ = node.create_publisher<unitree_hg::msg::LowCmd>(

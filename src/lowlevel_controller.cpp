@@ -117,6 +117,7 @@ void LowLevelController::switchControllerState() {
   std::cout << "[DapcController]" 
             << "\ninit base pos: " << init_state_.base_pos().transpose() 
             << "\ninit com  pos: " << init_com_.transpose()
+            << "\ninit base ori: " << init_state_.base_eulerZYX().transpose() 
             << std::endl; 
 }
 

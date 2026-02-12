@@ -41,7 +41,7 @@ protected:
   size_t motiontime_ = 0;
 
   void switchControllerState();
-  virtual void updateBaseState() {};
+  virtual void updateHighState() {};
   virtual void initHighController() {};
   virtual void resetHighController() {};
   virtual void updateHighController() {};

@@ -145,7 +145,7 @@ void LowLevelController::update() {
   }
 
   legged_adapter_->getLeggedState(real_state_);
-  updateBaseState();
+  updateHighState();
 
   switch (current_state_) {
   case RobotState::IDLE: {

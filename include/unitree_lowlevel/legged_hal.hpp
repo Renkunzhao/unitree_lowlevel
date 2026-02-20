@@ -5,6 +5,7 @@
 #include "unitree_lowlevel/gamepad.hpp"
 #include <legged_base/LeggedState.h>
 #include <legged_base/Utils.h>
+#include <logger/CsvLogger.h>
 
 struct JointCommand {
   Eigen::VectorXd q, dq, tau, kp, kd;
@@ -58,6 +59,17 @@ struct JointCommand {
     result.tau.setZero();
     return result;
   }
+
+  void log(std::string prefix){
+    CsvLogger& logger = CsvLogger::getInstance();
+
+    logger.update(prefix+"q", q);
+    logger.update(prefix+"dq", dq);
+    logger.update(prefix+"tau", tau);
+    logger.update(prefix+"kp", kp);
+    logger.update(prefix+"kd", kd);
+  }
+  
 };
 
 class ILeggedAdapter {

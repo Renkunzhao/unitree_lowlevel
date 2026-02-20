@@ -211,6 +211,8 @@ void LowLevelController::update() {
   }
 
   torqueClip();
+  jnt_cmd_.log("jnt_cmd_");
+  // jnt_cmd_.resizeZero(robot_model_.nJoints());
   legged_adapter_->sendJointCmd(jnt_cmd_);
 
   // 统计

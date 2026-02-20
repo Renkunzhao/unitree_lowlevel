@@ -107,6 +107,7 @@ public:
     msg.mode_pr = ModePR::PR;
     msg.mode_machine = ModeMachine::Dof29;
     for (int i = 0; i < N_JOINTS; ++i) {
+      msg.motor_cmd[i].mode = 1;
       msg.motor_cmd[i].q   = cmd.q[i];
       msg.motor_cmd[i].dq  = dq[i];
       msg.motor_cmd[i].kp  = cmd.kp[i];

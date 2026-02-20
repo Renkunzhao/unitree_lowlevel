@@ -92,6 +92,18 @@
       "options": {"cwd": "${workspaceFolder}"},
       "problemMatcher": []
     },
+    {
+      "label": "Unitree: G1 Test",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "scripts/ros2_task.sh",
+        "${input:NetworkInterface}", "${input:RosDistro}",
+        "../../build/unitree_sdk2/bin/g1_ankle_swing_example", "${input:NetworkInterface}"
+      ],
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": []
+    },
 
     // Controller
     {

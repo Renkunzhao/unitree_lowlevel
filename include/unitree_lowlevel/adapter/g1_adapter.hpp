@@ -122,14 +122,14 @@ public:
   }
 
   bool getLeggedState(LeggedState& out) override {
-    std::scoped_lock lk(state_mtx_);
+    // std::scoped_lock lk(state_mtx_);
     if (!has_state_) return false;
     updateLeggedState(out);
     return true;
   }
 
   bool getGamePad(unitree::common::Gamepad& out) override {
-    std::scoped_lock lk(state_mtx_);
+    // std::scoped_lock lk(state_mtx_);
     if (!has_state_) return false;
     unitree::common::REMOTE_DATA_RX rx;
     memcpy(rx.buff, lowstate_msg_.wireless_remote.data(), 40);  // NOLINT
@@ -166,7 +166,7 @@ private:
   }
 
   void onLowState(const unitree_hg::msg::LowState::SharedPtr msg) {
-    std::scoped_lock lk(state_mtx_);
+    // std::scoped_lock lk(state_mtx_);
     lowstate_msg_ = *msg;
     has_state_ = true;
     // std::cout << "[G1Adapter] onLowState: Lowstate msg received.\n";

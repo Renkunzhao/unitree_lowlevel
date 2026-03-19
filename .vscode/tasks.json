@@ -5,8 +5,8 @@
       "id": "RosDistro",
       "type": "pickString",
       "description": "Select ROS distribution",
-      "options": ["humble", "foxy", "galactic"],
-      "default": "humble"
+      "options": ["jazzy", "humble", "foxy", "galactic"],
+      "default": "jazzy"
     },
     {
       "id": "BuildType",

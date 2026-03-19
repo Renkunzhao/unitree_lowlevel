@@ -45,7 +45,7 @@ docker exec -it unitree_ws bash     # attach container
 ### Dependencies (skip if you use Docker)
 
 ```bash
-sudo apt install -y python-is-python3 libopenblas-dev python3-dev python3-vcstool libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev libfmt-dev
+sudo apt install -y python-is-python3 libopenblas-dev python3-dev python3-vcstool libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev libfmt-dev python3-toml
 
 sudo apt install ros-foxy-pinocchio
 ```

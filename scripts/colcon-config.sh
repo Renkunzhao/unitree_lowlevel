@@ -47,8 +47,10 @@ make -j$(nproc)
 # Build
 cd $PROJECT_DIR
 source /opt/ros/$ROS_DISTRO/setup.bash
-colcon build --packages-up-to manif unitree_sdk2
+colcon build --packages-up-to manif unitree_sdk2 --cmake-args \
+    -DPython3_EXECUTABLE=/usr/bin/python3
 source install/setup.bash
 colcon build --packages-up-to unitree_lowlevel --cmake-args \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-    -DCMAKE_BUILD_TYPE=$BUILD_TYPE 
+    -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+    -DPython3_EXECUTABLE=/usr/bin/python3

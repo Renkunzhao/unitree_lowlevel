@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
   std::cin.ignore();
 
   const std::string configFile = argv[2];
-  std::cout << "[go2_test] Load config from " << configFile << std::endl;
+  std::cout << "[unitree_lowlevel_node] Load config from " << configFile << std::endl;
 
   YAML::Node configNode = YAML::LoadFile(configFile);
 
@@ -30,12 +30,12 @@ int main(int argc, char* argv[]) {
   csvLogger.setCsvPath(log_path);
   csvLogger.init();
 
-  auto go2_node = std::make_shared<LowLevelController>();
+  auto lowlevel_node = std::make_shared<LowLevelController>();
 
   rclcpp::executors::MultiThreadedExecutor exec;
-  exec.add_node(go2_node);
+  exec.add_node(lowlevel_node);
 
-  go2_node->start(configFile);
+  lowlevel_node->start(configFile);
 
   exec.spin();
 

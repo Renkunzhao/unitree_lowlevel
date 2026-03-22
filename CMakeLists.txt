@@ -54,8 +54,8 @@ ament_target_dependencies(${PROJECT_NAME} PUBLIC rclcpp unitree_go unitree_hg un
 ##############################
 # 4️⃣ 可执行文件（独立测试）
 ##############################
-add_executable(go2_lowlevel_node src/go2_lowlevel_node.cpp)
-target_link_libraries(go2_lowlevel_node PRIVATE ${PROJECT_NAME})
+add_executable(unitree_lowlevel_node src/unitree_lowlevel_node.cpp)
+target_link_libraries(unitree_lowlevel_node PRIVATE ${PROJECT_NAME})
 
 ##############################
 # 5️⃣ 安装：库 + 头文件 + CMake Package（关键）
@@ -123,7 +123,7 @@ if(ament_cmake_FOUND)
     message(STATUS "Found ament_cmake")
 
     # 安装可执行文件
-    install(TARGETS go2_lowlevel_node
+    install(TARGETS unitree_lowlevel_node
         DESTINATION lib/${PROJECT_NAME}
     )
 

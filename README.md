@@ -93,8 +93,8 @@ Using the VS Code Dev Containers extension is recommended.
 Install ROS 2 first. This repository has been tested on Ubuntu 20.04, 22.04, and 24.04.
 
 ```bash
-sudo apt install -y python-is-python3 libopenblas-dev python3-dev python3-vcstool libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev libfmt-dev python3-toml
-sudo apt install ros-<ros-distro>-pinocchio
+sudo apt install -y python-is-python3 python3-colcon-common-extensions libopenblas-dev python3-dev python3-vcstool libyaml-cpp-dev libspdlog-dev libboost-all-dev libglfw3-dev libfmt-dev python3-toml
+sudo apt install ros-<ros-distro>-pinocchio ros-<ros-distro>-rmw-cyclonedds-cpp ros-<ros-distro>-rosidl-generator-dds-idl
 ```
 
 ### 3. Build the workspace

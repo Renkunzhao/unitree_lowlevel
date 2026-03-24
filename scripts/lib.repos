@@ -11,10 +11,6 @@ repositories:
     type: git
     url: https://github.com/ros2/rmw_cyclonedds
     version: 7cb3b38a21e14fbcc84aadcc460e4d812d0c7a7f
-  unitree_mujoco:
-    type: git
-    url: https://github.com/unitreerobotics/unitree_mujoco.git
-    version: 1a37b051a10be723405b7ed6dc839361af036d88
   unitree_ros2:
     type: git
     url: https://github.com/unitreerobotics/unitree_ros2.git

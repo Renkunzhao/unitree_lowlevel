@@ -42,7 +42,7 @@
       "id": "Scene",
       "type": "pickString",
       "description": "Select scene",
-      "options": ["scene.xml", "scene_29dof.xml"],
+      "options": ["scene.xml", "scene_29dof.xml", "scene_trampoline.xml"],
       "default": "scene.xml"
     },
   ],

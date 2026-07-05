@@ -114,7 +114,7 @@ void LowLevelController::switchControllerState() {
   init_com_ = robot_model_.com(init_state_.custom_state("q_pin"));
   init_qBase.resize(7);
   init_qBase << real_state_.base_pos(), real_state_.base_quat().coeffs();
-  std::cout << "[DapcController]" 
+  std::cout << "[LowLevelController]" 
             << "\ninit base pos: " << init_state_.base_pos().transpose() 
             << "\ninit com  pos: " << init_com_.transpose()
             << "\ninit base ori: " << init_state_.base_eulerZYX().transpose() 

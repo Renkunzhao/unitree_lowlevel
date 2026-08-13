@@ -1,7 +1,7 @@
 # Unitree Low Level
 
 `unitree_lowlevel` is a low-level control layer for Unitree Go2 and G1 robots.
-It reads robot state, runs a low-level control loop, exposes hooks for a user-defined high-level controller, and sends joint commands through the appropriate Unitree SDK adapter.
+It reads robot state, runs a low-level control loop, exposes hooks for a user-defined high-level controller, and sends joint commands through the appropriate Unitree ROS 2 message adapter.
 
 ## Overview
 
@@ -33,18 +33,18 @@ For a reference high-level controller integration, see [legged_rl_deploy](https:
 
 ## Simulation Notes
 
-`unitree_sdk2` and ROS 2 both use DDS. As long as the `ROS_DOMAIN_ID` and network interface are configured consistently, the same controller can talk to either hardware or simulation.
+The simulator and controller use the same Unitree ROS 2 messages. They must be started with the same `ROS_DOMAIN_ID`, RMW implementation, and network interface.
 
 To run Unitree MuJoCo:
 
 ```bash
 source src/unitree_lowlevel/scripts/setup.sh lo <ros-distro>
-$WORKSPACE/src/unitree_mujoco/simulate/build/unitree_mujoco -i 0 -n lo
+ros2 run unitree_mujoco unitree_mujoco
 ```
 
 Once MuJoCo is running, start the controller node with the matching robot config in another terminal.
 
-> Note: Unitree MuJoCo reads `src/unitree_mujoco/simulate/config.yaml`. Set `use_joystick: 1` there if you want joystick input.
+> Note: Unitree MuJoCo reads the installed `config.yaml`. With `--symlink-install`, it points directly to `src/unitree_mujoco/simulate/config.yaml`; otherwise rebuild after changing it. Set `use_joystick: 1` if you want joystick input.
 >
 > Note: Unitree typically uses `ROS_DOMAIN_ID=0` on hardware and recommends `ROS_DOMAIN_ID=1` for simulation. This repository keeps `ROS_DOMAIN_ID=0` for both, relying on different network interfaces such as `lo` for simulation and `eth0` for hardware.
 

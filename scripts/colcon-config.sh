@@ -28,13 +28,6 @@ cmake .. -DCMAKE_INSTALL_PREFIX=/opt/unitree_robotics
 make -j$(nproc)
 sudo make install
 
-# legged_base
-cd $PROJECT_DIR
-source /opt/ros/$ROS_DISTRO/setup.bash
-colcon build --packages-up-to legged_base --cmake-args \
-    -DPython3_EXECUTABLE=/usr/bin/python3
-source install/setup.bash
-
 # unitree_mujoco
 echo "=== Downloading Mujoco (Simulation Mode) ==="
 mkdir -p $HOME/.mujoco
@@ -44,20 +37,15 @@ tar -xvf mujoco-3.3.6-linux-$(uname -m).tar.gz
 
 echo "=== Building Unitree Mujoco ==="
 cd $PROJECT_DIR/src/unitree_mujoco/simulate
-ln -s ~/.mujoco/mujoco-3.3.6 mujoco
-mkdir build
-cd build
-source $PROJECT_DIR/src/unitree_lowlevel/scripts/unitree_sdk_path.sh
-cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE 
-make -j$(nproc)
+if [ ! -e mujoco ]; then
+    ln -s ~/.mujoco/mujoco-3.3.6 mujoco
+fi
 
 # Build
 cd $PROJECT_DIR
 source /opt/ros/$ROS_DISTRO/setup.bash
-colcon build --packages-up-to unitree_sdk2 --cmake-args \
-    -DPython3_EXECUTABLE=/usr/bin/python3
-source install/setup.bash
-colcon build --packages-up-to unitree_lowlevel --cmake-args \
+colcon build --symlink-install --packages-up-to unitree_lowlevel unitree_mujoco --cmake-args \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+    -DPython_EXECUTABLE=/usr/bin/python \
     -DPython3_EXECUTABLE=/usr/bin/python3

@@ -166,6 +166,7 @@ private:
   }
 
   void onLowState(const unitree_hg::msg::LowState::SharedPtr msg) {
+    recordLowStateArrival();
     // std::scoped_lock lk(state_mtx_);
     lowstate_msg_ = *msg;
     has_state_ = true;

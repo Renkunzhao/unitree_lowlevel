@@ -1,4 +1,9 @@
 #pragma once
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <mutex>
+
 #include <Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 
@@ -81,4 +86,67 @@ public:
   virtual void sendJointCmd(const JointCommand &joint_cmd) = 0;
   virtual bool getLeggedState(LeggedState &legged_state) = 0;
   virtual bool getGamePad(unitree::common::Gamepad &gamepad) = 0;
+
+  void logLowStateInputStatistics(
+      const rclcpp::Logger &logger,
+      std::chrono::steady_clock::time_point now) {
+    std::scoped_lock lock(lowstate_stats_mutex_);
+    if (!has_lowstate_arrival_ ||
+        now - lowstate_stats_window_start_ < std::chrono::seconds(1)) {
+      return;
+    }
+
+    double hz = 0.0;
+    if (lowstate_window_count_ >= 2) {
+      const double span_sec = std::chrono::duration<double>(
+          lowstate_window_last_ - lowstate_window_first_).count();
+      if (span_sec > 0.0) {
+        hz = static_cast<double>(lowstate_window_count_ - 1) / span_sec;
+      }
+    }
+    const double max_gap_ms = std::chrono::duration<double, std::milli>(
+        lowstate_window_max_gap_).count();
+    const double last_age_ms = std::chrono::duration<double, std::milli>(
+        now - lowstate_last_arrival_).count();
+
+    RCLCPP_INFO(logger,
+                "[lowstate_input] hz=%.1f max_gap_ms=%.2f "
+                "last_age_ms=%.2f",
+                hz, max_gap_ms, last_age_ms);
+
+    lowstate_stats_window_start_ = now;
+    lowstate_window_count_ = 0;
+    lowstate_window_max_gap_ = std::chrono::steady_clock::duration::zero();
+  }
+
+protected:
+  void recordLowStateArrival() {
+    const auto now = std::chrono::steady_clock::now();
+    std::scoped_lock lock(lowstate_stats_mutex_);
+
+    if (!has_lowstate_arrival_) {
+      has_lowstate_arrival_ = true;
+      lowstate_stats_window_start_ = now;
+    } else {
+      lowstate_window_max_gap_ =
+          std::max(lowstate_window_max_gap_, now - lowstate_last_arrival_);
+    }
+
+    if (lowstate_window_count_ == 0) {
+      lowstate_window_first_ = now;
+    }
+    lowstate_window_last_ = now;
+    lowstate_last_arrival_ = now;
+    ++lowstate_window_count_;
+  }
+
+private:
+  std::mutex lowstate_stats_mutex_;
+  bool has_lowstate_arrival_ = false;
+  size_t lowstate_window_count_ = 0;
+  std::chrono::steady_clock::time_point lowstate_stats_window_start_{};
+  std::chrono::steady_clock::time_point lowstate_window_first_{};
+  std::chrono::steady_clock::time_point lowstate_window_last_{};
+  std::chrono::steady_clock::time_point lowstate_last_arrival_{};
+  std::chrono::steady_clock::duration lowstate_window_max_gap_{};
 };

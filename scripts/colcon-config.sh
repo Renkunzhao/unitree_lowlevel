@@ -45,6 +45,7 @@ fi
 cd $PROJECT_DIR
 source /opt/ros/$ROS_DISTRO/setup.bash
 colcon build --symlink-install --packages-up-to unitree_lowlevel unitree_mujoco --cmake-args \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
     -DPython_EXECUTABLE=/usr/bin/python \

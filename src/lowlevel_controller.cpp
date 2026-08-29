@@ -123,6 +123,7 @@ void LowLevelController::switchControllerState() {
 
 void LowLevelController::update() {
   auto start = std::chrono::steady_clock::now();
+  legged_adapter_->logLowStateInputStatistics(get_logger(), start);
 
   motiontime_++;
 

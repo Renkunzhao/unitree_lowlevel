@@ -16,6 +16,13 @@
       "default": "Release"
     },
     {
+      "id": "SimMode",
+      "type": "pickString",
+      "description": "Build Unitree Mujoco simulation support",
+      "options": ["", "sim"],
+      "default": ""
+    },
+    {
       "id": "NetworkInterface",
       "type": "pickString",
       "description": "Select network interface",
@@ -49,7 +56,7 @@
     {
       "label": "Build",
       "type": "shell",
-      "command": "${workspaceFolder}/scripts/colcon-config.sh ${input:RosDistro} ${input:BuildType}",
+      "command": "${workspaceFolder}/scripts/colcon-config.sh ${input:RosDistro} ${input:BuildType} ${input:SimMode}",
       "group": "build",
       "problemMatcher": []
     },

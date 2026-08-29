@@ -48,6 +48,13 @@ void LowLevelController::start(std::string config_file) {
       legged_adapter_ = std::make_unique<Go2Adapter>();
     }
   }
+  const YAML::Node statistics = node_["statistics"];
+  const bool lowstate_stats_enabled =
+      statistics && statistics.IsMap() && statistics["lowstate_input"] &&
+      statistics["lowstate_input"].as<bool>();
+  legged_adapter_->setLowStateInputStatisticsEnabled(lowstate_stats_enabled);
+  RCLCPP_INFO(get_logger(), "LowState input statistics are %s",
+              lowstate_stats_enabled ? "enabled" : "disabled");
   legged_adapter_->setup(*this);
   jnt_cmd_.resizeZero(robot_model_.nJoints());
   

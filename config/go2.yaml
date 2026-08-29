@@ -7,6 +7,8 @@ log_path:
 
 ll_dt: 0.002
 use_sim_timer: false
+statistics:
+  lowstate_input: true
 
 kp: [60, 80, 80, 60, 80, 80, 60, 80, 80, 60, 80, 80]
 kd: [5, 4, 4, 5, 4, 4, 5, 4, 4, 5, 4, 4]

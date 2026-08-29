@@ -8,6 +8,8 @@ log_path:
 
 ll_dt: 0.002
 use_sim_timer: false
+statistics:
+  lowstate_input: true
 
 kp: [
   40.2, 99.1, 40.2, 99.1, 28.5, 28.5, 

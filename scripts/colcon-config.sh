@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Default build type is Release
 ROS_DISTRO="${1:-humble}"
@@ -33,16 +34,23 @@ sudo make install
 if [ "$SIM_MODE" = "sim" ]; then
     # unitree_mujoco
     echo "=== Downloading Mujoco (Simulation Mode) ==="
-    mkdir -p $HOME/.mujoco
-    cd $HOME/.mujoco
-    wget -nc https://github.com/google-deepmind/mujoco/releases/download/3.3.6/mujoco-3.3.6-linux-$(uname -m).tar.gz
-    tar -xvf mujoco-3.3.6-linux-$(uname -m).tar.gz
+    MUJOCO_VERSION=4.0.0
+    MUJOCO_ARCHIVE="mujoco-${MUJOCO_VERSION}-linux-$(uname -m).tar.gz"
+    mkdir -p "$HOME/.mujoco"
+    cd "$HOME/.mujoco"
+    if [ ! -f "$MUJOCO_ARCHIVE" ]; then
+        wget "https://github.com/google-deepmind/mujoco/releases/download/${MUJOCO_VERSION}/${MUJOCO_ARCHIVE}" -O "${MUJOCO_ARCHIVE}.part"
+        mv "${MUJOCO_ARCHIVE}.part" "$MUJOCO_ARCHIVE"
+    fi
+    tar -xf "$MUJOCO_ARCHIVE"
 
     echo "=== Building Unitree Mujoco ==="
-    cd $PROJECT_DIR/src/unitree_mujoco/simulate
-    if [ ! -e mujoco ]; then
-        ln -s ~/.mujoco/mujoco-3.3.6 mujoco
+    cd "$PROJECT_DIR/src/unitree_mujoco/simulate"
+    if [ -e mujoco ] && [ ! -L mujoco ]; then
+        echo "Expected simulate/mujoco to be a symlink; move the existing directory first." >&2
+        exit 1
     fi
+    ln -sfnT "$HOME/.mujoco/mujoco-${MUJOCO_VERSION}" mujoco
     BUILD_PACKAGES+=(unitree_mujoco)
 fi
 

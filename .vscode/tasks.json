@@ -51,6 +51,12 @@
       "description": "Input scene",
       "default": "scene.xml"
     },
+    {
+      "id": "Config",
+      "type": "promptString",
+      "description": "Input config",
+      "default": "config.yaml"
+    },
   ],
   "tasks": [
     {
@@ -85,6 +91,20 @@
         "scripts/ros2_task.sh", "lo", "${input:RosDistro}",
         "ros2", "run", "unitree_mujoco", "unitree_mujoco",
         "-r", "${input:Robot}", "-s", "${input:Scene}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ROS2: Mujoco (Config)",
+      "type": "process",
+      "command": "bash",
+      "args": [
+        "scripts/ros2_task.sh", "lo", "${input:RosDistro}",
+        "ros2", "run", "unitree_mujoco", "unitree_mujoco",
+        "--config", "${workspaceFolder}/../../src/unitree_mujoco/simulate/config/${input:Config}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"

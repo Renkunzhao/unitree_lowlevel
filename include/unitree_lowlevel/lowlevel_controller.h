@@ -17,7 +17,7 @@ class LowLevelController : public rclcpp::Node {
 public:
   LowLevelController();
   ~LowLevelController() {
-      sim_timer_->report();    
+      if (sim_timer_) sim_timer_->report();
   }
 
   void start(std::string config_file);

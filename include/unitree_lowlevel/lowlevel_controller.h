@@ -48,6 +48,7 @@ protected:
   virtual void log();
 
   bool safetyFlag = true;
+  bool enable_torque_clip_ = true;
   void eStop();
   void torqueClip();
 

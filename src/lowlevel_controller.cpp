@@ -27,6 +27,9 @@ void LowLevelController::start(std::string config_file) {
   std::cout << "[LowLevelController] Load config from " << config_file << std::endl;
   ll_dt_ = node_["ll_dt"].as<double>();
   use_sim_timer_ = node_["use_sim_timer"].as<bool>();
+  if (node_["enable_torque_clip"]) {
+    enable_torque_clip_ = node_["enable_torque_clip"].as<bool>();
+  }
   kp_ = legged_base::yamlToEigenVec(node_["kp"]);
   kd_ = legged_base::yamlToEigenVec(node_["kd"]);
 
@@ -102,6 +105,9 @@ void LowLevelController::eStop() {
 }
 
 void LowLevelController::torqueClip(){
+  if (!enable_torque_clip_) {
+    return;
+  }
   for (size_t j=0; j < robot_model_.nJoints(); ++j) {
     double tau_eff = jnt_cmd_.tau[j] + jnt_cmd_.kp[j] * (jnt_cmd_.q[j] - real_state_.joint_pos()[j]) + jnt_cmd_.kd[j] * (jnt_cmd_.dq[j] - real_state_.joint_vel()[j]);
     const double lim = robot_model_.tauMaxOrder()[j];

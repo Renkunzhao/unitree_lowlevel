@@ -180,7 +180,7 @@ private:
 
   void updateLeggedState(LeggedState& legged_state) {
     // ===== IMU =====
-    const double sgn = legged_base::sgn(lowstate_msg_.imu_state.quaternion[0]);
+    const double sgn = lowstate_msg_.imu_state.quaternion[0] < 0.0 ? -1.0 : 1.0;
     Eigen::Quaterniond quat_wxyz(
       sgn * lowstate_msg_.imu_state.quaternion[0],
       sgn * lowstate_msg_.imu_state.quaternion[1],
